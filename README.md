@@ -53,8 +53,8 @@
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/exiv703/-ShieldEye-ComplianceScan.git
-   cd ShieldEye-ComplianceScan
+   git clone https://github.com/exiv703/ShieldEy_ComplianceScan.git
+   cd ShieldEye_ComplianceScan
    ```
 2. **Install dependencies:**
    ```bash
