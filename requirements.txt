@@ -93,7 +93,7 @@ libcomps==0.1.20
 libdnf==0.74.0
 louis==3.28.0
 lxml==5.4.0
-maigret @ file:///home/exiv/maigret
+maigret
 MarkupSafe==3.0.2
 matplotlib==3.8.4
 matplotlib-inline==0.1.7
@@ -190,9 +190,7 @@ rsa==4.9
 s3transfer==0.11.5
 scapy==2.6.1
 SciPy==1.11.3
-selinux @ file:///builddir/build/BUILD/libselinux-3.7/src
 sentry-sdk==2.17.0
-sepolicy @ file:///builddir/build/BUILD/selinux-3.7/python/sepolicy
 setools==4.5.1
 setuptools==69.0.3
 sherlock-project==0.15.0
