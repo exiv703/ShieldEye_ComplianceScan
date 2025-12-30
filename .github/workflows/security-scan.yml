@@ -1,11 +1,11 @@
 name: Security Scanning
 
 on:
-  schedule:
-    # Run every day at 2 AM UTC
-    - cron: '0 2 * * *'
-  push:
-    branches: [ main ]
+  # schedule:
+  #   # Run every day at 2 AM UTC
+  #   - cron: '0 2 * * *'
+  # push:
+  #   branches: [ main ]
   workflow_dispatch:
 
 jobs:
