@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Development API with hot reload
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: shieldeye-api-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - SHIELDEYE_DB_PATH=/data/scans.db
+      - SHIELDEYE_LOG_LEVEL=DEBUG
+      - SHIELDEYE_LOG_FILE=/logs/shieldeye.log
+      - SHIELDEYE_TIMEOUT=30
+      - SHIELDEYE_MAX_PAGES=50
+    volumes:
+      - .:/app
+      - scan_data:/data
+      - scan_logs:/logs
+    networks:
+      - shieldeye-network
+    restart: unless-stopped
+
+  # Test runner
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: shieldeye-test
+    command: ["pytest", "tests/", "-v", "--cov=backend", "--cov-report=html"]
+    volumes:
+      - .:/app
+    networks:
+      - shieldeye-network
+    profiles:
+      - test
+
+volumes:
+  scan_data:
+    driver: local
+  scan_logs:
+    driver: local
+
+networks:
+  shieldeye-network:
+    driver: bridge
