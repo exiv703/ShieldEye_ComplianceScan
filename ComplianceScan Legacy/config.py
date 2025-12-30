@@ -52,7 +52,13 @@ class Text:
             providing tools for vulnerability scanning and compliance checking.
             </p>
             <p style='color: {Colors.TEXT_MUTED};'>© 2024 ShieldEye. All rights reserved.</p>
+        """
 
+    @staticmethod
+    def get_summary_html(scan_duration_secs, url, summary_counts, standards_audited, mode):
+        audited_str = ', '.join(standards_audited) if standards_audited else "None"
+        
+        return f"""
             <h3 style='color: {Colors.PRIMARY_ACCENT};'>Scan Summary</h3>
             <p style='color: {Colors.TEXT_MAIN};'><b>Target URL:</b> {url}</p>
             <p style='color: {Colors.TEXT_MAIN};'><b>Scan Mode:</b> {mode}</p>

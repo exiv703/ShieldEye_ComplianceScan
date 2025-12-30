@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # Main API service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shieldeye-api
+    ports:
+      - "8000:8000"
+    environment:
+      - SHIELDEYE_DB_PATH=/data/scans.db
+      - SHIELDEYE_LOG_LEVEL=INFO
+      - SHIELDEYE_LOG_FILE=/logs/shieldeye.log
+      - SHIELDEYE_TIMEOUT=30
+      - SHIELDEYE_MAX_PAGES=100
+      - SHIELDEYE_VERIFY_SSL=true
+    volumes:
+      - scan_data:/data
+      - scan_logs:/logs
+    networks:
+      - shieldeye-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Scheduler service for automated scans
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shieldeye-scheduler
+    command: ["python", "-m", "backend.cli.scheduler_daemon"]
+    environment:
+      - SHIELDEYE_DB_PATH=/data/scans.db
+      - SHIELDEYE_LOG_LEVEL=INFO
+      - SHIELDEYE_LOG_FILE=/logs/scheduler.log
+    volumes:
+      - scan_data:/data
+      - scan_logs:/logs
+    networks:
+      - shieldeye-network
+    restart: unless-stopped
+    depends_on:
+      - api
+
+  # Nginx reverse proxy (optional)
+  nginx:
+    image: nginx:alpine
+    container_name: shieldeye-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - shieldeye-network
+    restart: unless-stopped
+    depends_on:
+      - api
+    profiles:
+      - production
+
+volumes:
+  scan_data:
+    driver: local
+  scan_logs:
+    driver: local
+
+networks:
+  shieldeye-network:
+    driver: bridge

@@ -1,0 +1,42 @@
+# ShieldEye ComplianceScan - Development Dockerfile
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+# Install system dependencies + dev tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wkhtmltopdf \
+    xvfb \
+    libssl-dev \
+    ca-certificates \
+    curl \
+    git \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.txt .
+
+# Install Python dependencies + dev tools
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir \
+    pytest-watch \
+    ipython \
+    black \
+    flake8 \
+    mypy
+
+# Copy application code
+COPY . .
+
+# Create directories
+RUN mkdir -p ~/.shieldeye /data /logs
+
+EXPOSE 8000
+
+# Development server with auto-reload
+CMD ["uvicorn", "backend.api.rest:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
