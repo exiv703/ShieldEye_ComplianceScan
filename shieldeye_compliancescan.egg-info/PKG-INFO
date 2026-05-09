@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: shieldeye-compliancescan
+Version: 0.1.0
+Summary: ShieldEye ComplianceScan
+Requires-Python: >=3.10
+License-File: LICENSE
+Requires-Dist: networkx>=2.8.0
+Provides-Extra: dev
+Requires-Dist: mypy==1.10.0; extra == "dev"
+Requires-Dist: ruff==0.5.7; extra == "dev"
+Requires-Dist: bandit==1.7.9; extra == "dev"
+Requires-Dist: pre-commit==3.7.1; extra == "dev"
+Requires-Dist: pytest==8.4.2; extra == "dev"
+Requires-Dist: pytest-cov==4.1.0; extra == "dev"
+Dynamic: license-file

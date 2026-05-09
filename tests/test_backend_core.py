@@ -3,8 +3,8 @@ from __future__ import annotations
 import sys
 from typing import Any, Dict
 
-from backend.analysis import AnalysisResult, analyze_results
-from backend.backend import analyze_scan_results
+from backend import AnalysisResult, analyze_results, analyze_scan_results
+
 
 def _build_sample_results() -> Dict[str, Any]:
 
@@ -28,7 +28,8 @@ def _build_sample_results() -> Dict[str, Any]:
         },
     }
 
-def test_analyze_results_empty() -> bool:
+
+def test_analyze_results_empty() -> None:
     print("\n" + "=" * 70)
     print("BACKEND TEST 1: analyze_results on empty results")
     print("=" * 70)
@@ -47,9 +48,9 @@ def test_analyze_results_empty() -> bool:
     assert 0 <= analysis.score <= 100, "Score should be within 0..100"
 
     print("✅ PASS: analyze_results handles empty input correctly")
-    return True
 
-def test_analyze_results_sample_data() -> bool:
+
+def test_analyze_results_sample_data() -> None:
     print("\n" + "=" * 70)
     print("BACKEND TEST 2: analyze_results on sample findings")
     print("=" * 70)
@@ -73,9 +74,9 @@ def test_analyze_results_sample_data() -> bool:
     ), f"Unexpected score {analysis.score!r}, expected 88 for sample data"
 
     print("✅ PASS: analyze_results aggregates, sorts and scores sample data correctly")
-    return True
 
-def test_analyze_scan_results_wrapper() -> bool:
+
+def test_analyze_scan_results_wrapper() -> None:
     print("\n" + "=" * 70)
     print("BACKEND TEST 3: analyze_scan_results wrapper parity")
     print("=" * 70)
@@ -95,7 +96,7 @@ def test_analyze_scan_results_wrapper() -> bool:
     ], "Wrapper should preserve findings ordering and messages"
 
     print("✅ PASS: analyze_scan_results behaves identically to analyze_results")
-    return True
+
 
 def main() -> int:
     tests = [
@@ -107,17 +108,13 @@ def main() -> int:
     all_ok = True
     for name, func in tests:
         try:
-            ok = func()
+            func()
         except AssertionError as e:
             all_ok = False
             print(f"❌ {name} FAILED: {e}")
         except Exception as e:
             all_ok = False
             print(f"❌ {name} ERROR: {e}")
-        else:
-            if not ok:
-                all_ok = False
-                print(f"❌ {name} returned False")
 
     print("\n" + "=" * 70)
     if all_ok:
@@ -127,5 +124,8 @@ def main() -> int:
         print("❌ SOME BACKEND TESTS FAILED")
         return 1
 
+
 if __name__ == "__main__":
     raise SystemExit(main())
+
+# Impact: Correct core-analysis imports prevent false-negative test collection, preserving trustworthy compliance evidence from backend contract tests.

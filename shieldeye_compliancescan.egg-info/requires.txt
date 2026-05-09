@@ -1,0 +1,9 @@
+networkx>=2.8.0
+
+[dev]
+mypy==1.10.0
+ruff==0.5.7
+bandit==1.7.9
+pre-commit==3.7.1
+pytest==8.4.2
+pytest-cov==4.1.0

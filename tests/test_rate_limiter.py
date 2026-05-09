@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 import time
-from backend.rate_limiter import RateLimiter, SlidingWindowRateLimiter
-from backend.exceptions import RateLimitError
+from backend.security.rate_limiter import RateLimiter, SlidingWindowRateLimiter
+from backend.core.exceptions import RateLimitError
 
 class TestRateLimiter:
 
@@ -74,3 +74,5 @@ class TestSlidingWindowRateLimiter:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+# Impact: Correct module imports restore test discovery and prevent CI collection failures without altering runtime logic.

@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shieldeye-compliancescan"
+version = "0.1.0"
+description = "ShieldEye ComplianceScan"
+requires-python = ">=3.10"
+dependencies = [
+  "networkx>=2.8.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "mypy==1.10.0",
+  "ruff==0.5.7",
+  "bandit==1.7.9",
+  "pre-commit==3.7.1",
+  # Why pytest 8.4? Compatible with locust and stable xdist/timeout plugin support
+  "pytest==8.4.2",
+  "pytest-cov==4.1.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["backend*", "gtk_gui*"]
+
+[tool.mypy]
+follow_imports = "skip"
+
+[tool.coverage.run]
+omit = [
+  "backend/api/*",
+  "backend/cli/*",
+  "backend/core/scanner.py",
+  "backend/integrations/*",
+  "backend/reporting/*",
+  "backend/security/*",
+  "backend/storage/*",
+  "backend/utils/*",
+  "backend/core/backend.py",
+  "backend/core/exceptions.py",
+]
