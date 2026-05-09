@@ -319,15 +319,46 @@ sudo augenrules --load
 sudo systemctl enable --now auditd
 ```
 
+## Phase 2 Capabilities
+
+- **Policy-as-code:** YAML/Rego parsing with `control_id` validation (`policy/validator.py`)
+- **Control mapping:** CIS/PCI-DSS/SOC2/GDPR registries + remediation templates (`benchmark/engine.py`)
+- **Async execution:** Idempotent, retry-aware benchmark orchestration (`benchmark/orchestrator.py`)
+- **Integrations:** Typed clients for Core + SurfaceScan with SSRF-safe validation (`integrations/core_client.py`, `integrations/surfacescan_client.py`)
+- **Reporting:** Copy-paste remediation snippets + JSON/SARIF export (`backend/reporting/exporters.py`)
+
 ## API Surface
 
-- `POST /scans`
-- `GET /scans/{id}`
-- `GET /health`
+> **MVP note:** All endpoints require Bearer token authentication. CLI access is available for local/development workflows.
+
+| Method | Endpoint | Description | Permission |
+|--------|----------|-------------|------------|
+| `POST` | `/scans` | Create and queue a new compliance scan | `scan:write` |
+| `GET`  | `/scans` | List recent scans with filtering | `scan:read` |
+| `GET`  | `/scans/{id}` | Retrieve scan details and findings | `scan:read` |
+| `DELETE` | `/scans/{id}` | Remove a scan and its findings | `scan:delete` |
+| `GET`  | `/scans/{id}/export?format=sarif` | Export scan results (json, csv, xml, sarif, markdown) | `scan:read` |
+| `GET`  | `/health` | Service health and dependency checks | — |
+| `GET`  | `/templates` | List available scan templates | — |
+| `GET`  | `/templates/{name}` | Get template configuration | — |
+| `POST` | `/schedules` | Create a recurring scan schedule | `scan:write` |
+| `GET`  | `/schedules` | List active scan schedules | `scan:read` |
+| `DELETE` | `/schedules/{id}` | Cancel a scheduled scan | `scan:write` |
+| `POST` | `/webhooks/subscribe` | Subscribe to scan-completion events | `config:write` |
+| `GET`  | `/webhooks` | List webhook subscriptions | `config:write` |
+| `POST` | `/users` | Create a new user account | `user:manage` |
+| `POST` | `/api-keys` | Generate a scoped API key | — |
+| `GET`  | `/stats` | Aggregated scan statistics | `scan:read` |
 
 ## Integration Diagram
 
 See `docs/INTEGRATION_GUIDE.md` for Core/SurfaceScan data flow.
+
+## Coming in Phase 3
+
+- **Async hardening:** Circuit breakers, rate limiting per target, and backpressure-aware queues
+- **Observability:** Prometheus metrics, structured tracing hooks, and OpenTelemetry integration
+- **Advanced correlation:** ML-based finding→control mapping (semantic similarity beyond heuristic prefix matching)
 
 ---
 
@@ -351,4 +382,4 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 </div>
 
-# Impact: Why this matters: Clear docs + changelog enable auditable, reproducible compliance deployments.
+# Impact: Why this matters: Clear docs + roadmap enable auditable, reproducible compliance deployments and smooth Phase 3 transition.

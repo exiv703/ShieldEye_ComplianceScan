@@ -23,7 +23,7 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["backend*", "gtk_gui*"]
+include = ["backend*", "gtk_gui*", "policy*"]
 
 [tool.mypy]
 follow_imports = "skip"
