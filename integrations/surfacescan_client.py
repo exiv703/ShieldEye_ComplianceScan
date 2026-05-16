@@ -1,4 +1,4 @@
-"""Typed client for importing findings from ShieldEye-SurfaceScan."""
+"""HTTP client for importing SurfaceScan findings and mapping them to controls."""
 
 # mypy: ignore-errors
 
@@ -15,6 +15,8 @@ from pydantic import BaseModel
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from integrations.correlation import CorrelationEngine, get_correlation_engine
+
 logger = logging.getLogger("shieldeye.integrations.surfacescan")
 
 
@@ -26,6 +28,15 @@ class SurfaceFinding(BaseModel):
     description: str
     remediation_hint: str
     timestamp: datetime
+
+
+_CONTROL_DESCRIPTIONS: dict[str, str] = {
+    "CIS-4.1.3": "Ensure auditd is configured for security event telemetry",
+    "CIS-4.2.1": "Ensure logging configuration is hardened for forensic traceability",
+    "CIS-5.1.1": "Ensure SSH daemon is configured",
+    "GDPR-32.1.1": "Ensure data encryption in transit",
+    "GDPR-32.2.1": "Ensure consent/security headers are consistently applied",
+}
 
 
 class SurfaceScanClient:
@@ -64,7 +75,6 @@ class SurfaceScanClient:
 
     @staticmethod
     def _validate_base_url(url: str, allow_internal: bool = False) -> str:
-        # Why block localhost? Prevents SSRF attacks via malicious target URLs
         if not url or not isinstance(url, str):
             raise ValueError("base_url must be a non-empty string")
 
@@ -82,14 +92,15 @@ class SurfaceScanClient:
             hostname = parsed.hostname or ""
             if hostname in ("localhost", "127.0.0.1", "::1"):
                 raise ValueError("Localhost and private IP addresses are not allowed")
+            ip_obj = None
             try:
-                ip = ipaddress.ip_address(hostname)
-                if ip.is_private or ip.is_loopback or ip.is_link_local:
-                    raise ValueError(
-                        "Localhost and private IP addresses are not allowed"
-                    )
+                ip_obj = ipaddress.ip_address(hostname)
             except ValueError:
                 pass
+            if ip_obj is not None and (
+                ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local
+            ):
+                raise ValueError("Localhost and private IP addresses are not allowed")
 
         return url.rstrip("/")
 
@@ -100,8 +111,7 @@ class SurfaceScanClient:
             response = self.session.get(url, timeout=self.timeout)
         except requests.Timeout:
             logger.warning(
-                "SurfaceScan API timeout for %s. "
-                "hint: check network connectivity or increase timeout",
+                "SurfaceScan API timeout for %s — check network or increase timeout",
                 target_url,
             )
             return []
@@ -110,10 +120,7 @@ class SurfaceScanClient:
             return []
 
         if response.status_code == 404:
-            logger.info(
-                "SurfaceScan returned 404 for %s — target may have no findings",
-                target_url,
-            )
+            logger.info("SurfaceScan 404 for %s — probably no findings", target_url)
             return []
 
         response.raise_for_status()
@@ -121,9 +128,7 @@ class SurfaceScanClient:
         try:
             data = response.json()
         except ValueError:
-            logger.warning(
-                "SurfaceScan API returned invalid JSON. hint: verify API version compatibility"
-            )
+            logger.warning("SurfaceScan API returned invalid JSON")
             return []
 
         if not isinstance(data, list):
@@ -134,26 +139,41 @@ class SurfaceScanClient:
             try:
                 results.append(SurfaceFinding.model_validate(item))
             except Exception:
-                logger.warning(
-                    "SurfaceScan API returned unexpected schema. "
-                    "hint: verify API version compatibility"
-                )
+                logger.warning("SurfaceScan API returned unexpected schema")
                 continue
 
         return results
 
     def correlate_to_control(self, finding: SurfaceFinding, control_id: str) -> bool:
-        # Why heuristic? Full ML correlation is Phase 3; this enables MVP demo
-        if finding.category == "ssl" and control_id.startswith("CIS-4."):
+        engine = get_correlation_engine()
+        control_description = _CONTROL_DESCRIPTIONS.get(control_id, "")
+        result = engine.correlate(
+            finding.description,
+            control_description,
+            finding.category,
+            control_id,
+        )
+        if result["matched"] is True:
+            logger.info(
+                "Correlation matched finding %s to %s via %s (reason=%s)",
+                finding.finding_id,
+                control_id,
+                result.get("method", "unknown"),
+                result.get("reason", "unknown"),
+            )
             return True
-        if finding.category == "headers" and control_id.startswith("CIS-5."):
-            return True
-        if finding.category == "cookies" and control_id.startswith("CIS-5."):
-            return True
-        if finding.category == "privacy" and control_id.startswith("GDPR-"):
-            return True
-        if finding.category == "tracking" and control_id.startswith("GDPR-"):
-            return True
+        if result["method"] == "heuristic":
+            logger.debug(
+                "Heuristic fallback used for control %s: %s",
+                control_id,
+                result.get("reason", "unknown"),
+            )
+        else:
+            logger.debug(
+                "ML correlation rejected for control %s: %s",
+                control_id,
+                result.get("reason", "unknown"),
+            )
         return False
 
     def correlate_findings_to_control(
@@ -166,7 +186,3 @@ class SurfaceScanClient:
             control_id,
         )
         return correlated
-
-
-# Impact: SurfaceScanClient enables importing surface-level security findings and correlating
-# them to compliance controls via heuristic mapping, forming the MVP integration bridge.

@@ -127,5 +127,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
-# Impact: Correct core-analysis imports prevent false-negative test collection, preserving trustworthy compliance evidence from backend contract tests.

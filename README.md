@@ -327,6 +327,78 @@ sudo systemctl enable --now auditd
 - **Integrations:** Typed clients for Core + SurfaceScan with SSRF-safe validation (`integrations/core_client.py`, `integrations/surfacescan_client.py`)
 - **Reporting:** Copy-paste remediation snippets + JSON/SARIF export (`backend/reporting/exporters.py`)
 
+## Phase 3 Capabilities
+
+- **Resilience hardening:** Per-target rate limiting and circuit-breaker protections for upstream dependencies (`backend/utils/resilience.py`)
+- **Observability:** `MetricsCollector` telemetry, Prometheus export toggle, and `trace_span` tracing hooks (`backend/utils/observability.py`)
+- **Advanced correlation:** `CorrelationEngine` with heuristic + optional ML backend and tunable `confidence_threshold` (`integrations/correlation.py`)
+
+## Production Deployment
+
+- **Redis configuration:** Set `SHIELDEYE_REDIS_URL` to a highly available Redis instance to enforce distributed rate limits consistently across workers.
+- **Prometheus scraping:** Start with `scrape_interval: 15s` for production visibility, then tune based on cardinality and ingestion cost.
+- **ML correlation resources:** Enable `ENABLE_ML_CORRELATION` only on nodes sized for embedding inference; keep heuristic fallback enabled for graceful degradation.
+
+## v1.0.0 Release Highlights
+
+- **Production-ready compliance scanning stack:** Stable scanner, policy engine, integrations, and reporting pipeline across `backend/`, `policy/`, and `reporting/`.
+- **Policy-as-code + benchmark orchestration:** YAML/Rego validation, control mapping, and idempotent async execution via `policy/validator.py`, `benchmark/engine.py`, and `benchmark/orchestrator.py`.
+- **Enterprise integrations + correlation:** Typed ShieldEye-Core/SurfaceScan clients with deterministic correlation fallback in `integrations/`.
+- **Operational hardening:** Redis-backed resilience controls, observability hooks, and monitoring endpoints via `backend/utils/resilience.py`, `backend/utils/observability.py`, and `api/routes/monitoring.py`.
+- **Release-grade type hygiene and config safety:** Structured environment handling and strict runtime validation in `backend/utils/config.py`.
+
+## Migration Guide: v0.4.0-rc1 → v1.0.0
+
+### Breaking changes
+
+- None.
+
+### Configuration updates
+
+- Keep existing `SHIELDEYE_DB_URL` and `SHIELDEYE_REDIS_URL`; no rename required.
+- Add/verify policy and monitoring controls:
+  - `ENABLE_POLICY_CACHE`
+  - `SHIELDEYE_ENABLE_REALTIME_MONITORING`
+  - `SHIELDEYE_ALERT_WINDOW_SECONDS`
+- Optional production toggles (default safe/off):
+  - `SHIELDEYE_ENABLE_PROMETHEUS_EXPORT`
+  - `SHIELDEYE_ENABLE_OPENTELEMETRY`
+  - `SHIELDEYE_ENABLE_INTERACTIVE_REMEDIATION`
+  - `ENABLE_GRC_EXPORT`
+
+### Upgrade steps
+
+1. Pull the GA release and reinstall dependencies:
+
+```bash
+git fetch --tags
+git checkout v1.0.0
+pip install -r requirements.txt
+```
+
+2. Refresh environment configuration from `.env.example`:
+
+```bash
+cp .env.example .env
+# re-apply environment-specific values (DB URL, Redis URL, webhook endpoints)
+```
+
+3. Validate core flags and run tests:
+
+```bash
+pytest tests/ -v
+python -m backend.cli.advanced health
+```
+
+4. Run a smoke scan and verify exports/monitoring paths:
+
+```bash
+python -m backend.cli.advanced scan https://example.com --save-db
+python -m backend.cli.advanced history --limit 5
+```
+
+5. For detailed troubleshooting and rollout notes, see `docs/MIGRATION_GUIDE.md`.
+
 ## API Surface
 
 > **MVP note:** All endpoints require Bearer token authentication. CLI access is available for local/development workflows.
@@ -354,11 +426,11 @@ sudo systemctl enable --now auditd
 
 See `docs/INTEGRATION_GUIDE.md` for Core/SurfaceScan data flow.
 
-## Coming in Phase 3
+## Future Roadmap (Post-v1.0.0)
 
-- **Async hardening:** Circuit breakers, rate limiting per target, and backpressure-aware queues
-- **Observability:** Prometheus metrics, structured tracing hooks, and OpenTelemetry integration
-- **Advanced correlation:** ML-based finding→control mapping (semantic similarity beyond heuristic prefix matching)
+- **ML correlation calibration:** Environment-specific threshold tuning, model evaluation loops, and confidence quality dashboards
+- **GRC API clients:** Native vendor API transports in addition to current payload formatting/webhook patterns
+- **Policy UI:** Guided policy authoring, schema linting, and approval workflows for collaborative governance
 
 ---
 
@@ -382,4 +454,4 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 </div>
 
-# Impact: Why this matters: Clear docs + roadmap enable auditable, reproducible compliance deployments and smooth Phase 3 transition.
+# Impact: Clear release notes + migration path enable safe adoption of v1.0.0 in production environments.

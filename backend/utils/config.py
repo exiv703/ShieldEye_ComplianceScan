@@ -90,11 +90,23 @@ class Config(BaseSettings):
         default="postgresql://postgres:postgres@localhost:5432/shieldeye"  # nosec B106,B107  # pragma: allowlist secret
     )
     redis_url: RedisDsn | None = None
-    timeout_seconds: int = Field(
-        default=300, ge=5, le=600
-    )  # Why 600s? Balances scan completeness vs UX timeout
+    timeout_seconds: int = Field(default=300, ge=5, le=600)
     verify_ssl: bool = True
     allow_insecure_targets: bool = Field(default=False)
+    enable_prometheus_export: bool = Field(default=False)
+    enable_opentelemetry: bool = Field(default=False)
+    # Why optional? Interactive wizard adds UI complexity; JSON-only mode for API-first deployments
+    enable_interactive_remediation: bool = Field(default=False)
+    # Why optional? API-first teams may manage policies via GitOps; UI workflow for collaborative teams
+    enable_policy_management: bool = Field(default=False)
+    # Why optional? Real-time features add WebSocket complexity; batch reporting suffices for many teams
+    enable_realtime_monitoring: bool = Field(default=False)
+    alert_evaluation_window_seconds: int = Field(default=300, ge=30, le=3600)
+    enable_grc_export: bool = Field(default=False)
+    grc_platform: str = Field(default="servicenow")
+    grc_webhook_url: str | None = Field(default=None)
+    enable_ml_correlation: bool = Field(default=False)
+    ml_correlation_confidence_threshold: float = Field(default=0.75, ge=0.0, le=1.0)
 
     scanner: ScannerConfig = Field(default_factory=ScannerConfig)
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
@@ -174,6 +186,38 @@ class Config(BaseSettings):
 
         if allow_insecure_targets := os.getenv("SHIELDEYE_ALLOW_INSECURE_TARGETS"):
             values["allow_insecure_targets"] = _to_bool(allow_insecure_targets)
+        if prometheus_export := os.getenv("SHIELDEYE_ENABLE_PROMETHEUS_EXPORT"):
+            values["enable_prometheus_export"] = _to_bool(prometheus_export)
+        if otel := os.getenv("SHIELDEYE_ENABLE_OPENTELEMETRY"):
+            values["enable_opentelemetry"] = _to_bool(otel)
+        if interactive_remediation := os.getenv(
+            "SHIELDEYE_ENABLE_INTERACTIVE_REMEDIATION"
+        ):
+            values["enable_interactive_remediation"] = _to_bool(interactive_remediation)
+        if enable_policy_management := os.getenv("SHIELDEYE_ENABLE_POLICY_MANAGEMENT"):
+            values["enable_policy_management"] = _to_bool(enable_policy_management)
+        if enable_realtime_monitoring := os.getenv(
+            "SHIELDEYE_ENABLE_REALTIME_MONITORING"
+        ):
+            values["enable_realtime_monitoring"] = _to_bool(enable_realtime_monitoring)
+        if alert_window_seconds := os.getenv("SHIELDEYE_ALERT_WINDOW_SECONDS"):
+            values["alert_evaluation_window_seconds"] = int(alert_window_seconds)
+        if enable_grc_export := os.getenv("ENABLE_GRC_EXPORT"):
+            values["enable_grc_export"] = _to_bool(enable_grc_export)
+        if shieldeye_enable_grc_export := os.getenv("SHIELDEYE_ENABLE_GRC_EXPORT"):
+            values["enable_grc_export"] = _to_bool(shieldeye_enable_grc_export)
+        if grc_platform := os.getenv("GRC_PLATFORM"):
+            values["grc_platform"] = grc_platform.strip().lower()
+        if shieldeye_grc_platform := os.getenv("SHIELDEYE_GRC_PLATFORM"):
+            values["grc_platform"] = shieldeye_grc_platform.strip().lower()
+        if grc_webhook_url := os.getenv("GRC_WEBHOOK_URL"):
+            values["grc_webhook_url"] = grc_webhook_url
+        if shieldeye_grc_webhook_url := os.getenv("SHIELDEYE_GRC_WEBHOOK_URL"):
+            values["grc_webhook_url"] = shieldeye_grc_webhook_url
+        if enable_ml := os.getenv("ENABLE_ML_CORRELATION"):
+            values["enable_ml_correlation"] = _to_bool(enable_ml)
+        if ml_threshold := os.getenv("ML_CORRELATION_CONFIDENCE_THRESHOLD"):
+            values["ml_correlation_confidence_threshold"] = float(ml_threshold)
 
         values["scanner"] = scanner
         values["database"] = database
@@ -242,4 +286,4 @@ def validate_config_at_startup(config: Config) -> None:
         )
 
 
-# Impact: nosec suppressions prevent DSN example false positives, keeping pre-commit/CI reliable while preserving unchanged configuration validation behavior.
+# Impact: Adds optional operational feature flags so teams can safely enable real-time monitoring and alert windows without changing baseline API behavior.

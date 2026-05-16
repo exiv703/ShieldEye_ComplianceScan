@@ -120,6 +120,16 @@ if FASTAPI_AVAILABLE:
 
     security = HTTPBearer()
 
+    config = get_config()
+    if getattr(config, "enable_policy_management", False):
+        from api.routes.policies import router as policies_router
+
+        app.include_router(policies_router, prefix="/api")
+    if getattr(config, "enable_realtime_monitoring", False):
+        from api.routes.monitoring import monitoring_router
+
+        app.include_router(monitoring_router, prefix="/api")
+
     @app.middleware("http")
     async def enforce_allowed_hosts(request: Request, call_next):
         config = get_config()
@@ -223,13 +233,16 @@ if FASTAPI_AVAILABLE:
                 with db._get_connection() as conn:
                     cursor = conn.cursor()
 
-                    # Why idempotency? Compliance audits require deterministic scan evidence; duplicates corrupt reporting.
+                    idempotency_key = hashlib.sha256(
+                        f"{request.idempotency_key}:{request.url}".encode("utf-8")
+                    ).hexdigest()
                     if request.idempotency_key:
                         cursor.execute(
                             """
                             SELECT s.scan_id
                             FROM scans s
                             JOIN scan_metadata sm ON sm.scan_id = s.scan_id
+                            WHERE sm.key = 'idempotency_key_hash'
                             WHERE sm.key = ?
                               AND sm.value = ?
                               AND s.url = ?
@@ -616,5 +629,3 @@ def start_api_server(host: str = "0.0.0.0", port: int = 8000):
 
 if __name__ == "__main__":
     start_api_server()
-
-# Impact: Idempotency guard ensures retries or races do not create duplicate scans, preserving deterministic compliance evidence and reporting integrity.

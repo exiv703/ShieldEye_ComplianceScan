@@ -361,6 +361,3 @@ def get_template_manager() -> ScanTemplateManager:
     if _template_manager is None:
         _template_manager = ScanTemplateManager()
     return _template_manager
-
-
-# Impact: Enforces secure TLS defaults in shipped scan templates while preserving backward compatibility through an explicit, auditable insecure override.

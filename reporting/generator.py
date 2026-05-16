@@ -10,10 +10,12 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from backend.utils.config import get_config
 from backend.utils.logging_config import get_logger
 from benchmark.engine import ControlMapping, get_control_mapping
 from benchmark.orchestrator import BenchmarkResult
 from integrations.surfacescan_client import SurfaceFinding
+from reporting.wizard import RemediationWizard
 
 logger = get_logger("reporting.generator")
 
@@ -32,7 +34,7 @@ _SECRET_REDACTION_PATTERNS: list[re.Pattern[str]] = [
 
 
 def _scrub_output(text: str) -> str:
-    """Redact likely secrets from command output before persistence."""
+    """Mask likely secrets before writing output."""
     for pattern in _SECRET_REDACTION_PATTERNS:
         text = pattern.sub("***REDACTED***", text)
     return text
@@ -43,7 +45,7 @@ _GENERATOR_VERSION = "1.0.0"
 
 
 class ComplianceReport(BaseModel):  # type: ignore[misc]
-    """Pydantic v2 schema unifying orchestrator results and integration findings."""
+    """Report envelope shared by exports, remediation, and integrations."""
 
     report_id: str
     target: str
@@ -56,20 +58,13 @@ class ComplianceReport(BaseModel):  # type: ignore[misc]
 
 
 def _is_complex_command(command: str) -> bool:
-    """Determine if a remediation command is complex enough to warrant a hint."""
     return any(op in command for op in ("&&", "||", "|", ";", "\n"))
 
 
 def generate_remediation_snippet(
     mapping: ControlMapping, context: dict[str, str]
 ) -> str:
-    """Render a copy-paste ready remediation command from a mapping template.
-
-    Replaces ``{variable}`` placeholders in *remediation_template* with values
-    from *context*, prepends a safety comment when elevated privileges are
-    required, and adds an operational hint for complex commands.
-    """
-    # Why copy-paste ready? Operators need actionable fixes, not just 'FAIL'
+    """Render remediation command with placeholders and safety hints."""
     scrubbed_context = {k: _scrub_output(v) for k, v in context.items()}
 
     raw_command = mapping.remediation_template
@@ -78,11 +73,9 @@ def generate_remediation_snippet(
 
     lines: list[str] = []
     if _is_complex_command(raw_command):
-        hint = (
-            f"# Why this command? Applies the security fix for {mapping.control_id} "
-            f"({mapping.standard} {mapping.section})"
+        lines.append(
+            f"# Fix for {mapping.control_id} ({mapping.standard} {mapping.section})"
         )
-        lines.append(hint)
 
     if "sudo" in raw_command:
         lines.append("# Requires elevated privileges")
@@ -92,7 +85,6 @@ def generate_remediation_snippet(
 
 
 def _atomic_write_json(data: dict[str, Any], output_path: str) -> None:
-    """Write JSON data atomically using a temporary file + rename."""
     output_path_resolved = Path(output_path).resolve()
     dir_name = output_path_resolved.parent
     dir_name.mkdir(parents=True, exist_ok=True)
@@ -108,20 +100,64 @@ def _atomic_write_json(data: dict[str, Any], output_path: str) -> None:
 
 
 def export_json_report(report: ComplianceReport, output_path: str) -> None:
-    """Export a ComplianceReport to a JSON file with audit metadata.
-
-    Serializes the report, injects audit metadata, and writes atomically.
-    Secrets are redacted from any user-provided context before inclusion.
-    """
+    """Build and write JSON report with optional wizard and GRC sections."""
     # Pydantic v2: model_dump(mode="json") provides a JSON-serializable dict.
     # Secret redaction is handled upstream via _scrub_output.
     data = report.model_dump(mode="json")
+    config = get_config()
+    enable_interactive_remediation = (
+        config.enable_interactive_remediation
+        or os.getenv("ENABLE_INTERACTIVE_REMEDIATION", "false").lower() == "true"
+    )
+    enable_grc_export = (
+        config.enable_grc_export
+        or os.getenv("ENABLE_GRC_EXPORT", "false").lower() == "true"
+    )
+
+    wizard_steps = []
+    if enable_interactive_remediation or enable_grc_export:
+        wizard = RemediationWizard(report=report, target=report.target)
+        wizard_steps = wizard.generate_steps()
+
+    if enable_interactive_remediation:
+        data["wizard_steps"] = [step.model_dump(mode="json") for step in wizard_steps]
+
+    if enable_grc_export:
+        grc_platform = config.grc_platform
+        # Why formatter wording? Phase 4 shapes payloads + webhook sync; direct vendor transport lands in Phase 5.
+        try:
+            from reporting.grc_payload_formatters import create_grc_payload_formatter
+
+            formatter = create_grc_payload_formatter(
+                grc_platform,
+                webhook_url=config.grc_webhook_url,
+            )
+            grc_result = formatter.export(report=report, wizard_steps=wizard_steps)
+            data["grc_export"] = grc_result.model_dump(mode="json")
+            logger.info(
+                "GRC payload formatting complete for %s (status=%s, webhook_queued=%s)",
+                grc_platform,
+                grc_result.status,
+                grc_result.webhook_queued,
+            )
+            if grc_result.status == "partial":
+                logger.warning(
+                    "GRC export partially completed for platform %s. hint: review grc_export.errors and replay failed records",
+                    grc_platform,
+                )
+        except Exception:
+            logger.warning(
+                "GRC export failed for platform %s. hint: verify GRC credentials/platform config and webhook reachability",
+                grc_platform,
+            )
 
     feature_flags_snapshot = {
         "ENABLE_REMEDIATION_SNIPPETS": os.getenv(
             "ENABLE_REMEDIATION_SNIPPETS", "true"
         ).lower()
         == "true",
+        "ENABLE_INTERACTIVE_REMEDIATION": enable_interactive_remediation,
+        "ENABLE_GRC_EXPORT": enable_grc_export,
     }
 
     data["audit_metadata"] = {
@@ -140,15 +176,11 @@ def export_json_report(report: ComplianceReport, output_path: str) -> None:
         _atomic_write_json(data, output_path)
         logger.info("JSON report exported to %s", output_path)
     except OSError:
-        logger.warning(
-            "Failed to export report to %s. hint: check file permissions or disk space",
-            output_path,
-        )
+        logger.warning("Failed to export report to %s", output_path)
         raise
 
 
 def _status_to_sarif_level(status: str, severity: str | None) -> str:
-    """Map BenchmarkResult status to SARIF v2.1.0 result level."""
     if status == "passed":
         return "none"
     if status == "skipped":
@@ -161,12 +193,7 @@ def _status_to_sarif_level(status: str, severity: str | None) -> str:
 
 
 def export_sarif_report(report: ComplianceReport, output_path: str) -> None:
-    """Export a ComplianceReport to a minimal SARIF v2.1.0 JSON file.
-
-    Dict-based JSON assembly — no template rendering required.
-    If jinja2 is not available, this path is already used.
-    """
-    # Why SARIF? Enables import into GRC platforms like ServiceNow, Drata
+    """Write report findings as a minimal SARIF v2.1.0 document."""
     results: list[dict[str, Any]] = []
     for benchmark_result in report.results:
         severity: str | None = None
@@ -214,13 +241,8 @@ def export_sarif_report(report: ComplianceReport, output_path: str) -> None:
     try:
         _atomic_write_json(sarif_doc, output_path)
     except OSError:
-        logger.warning(
-            "Failed to export report to %s. hint: check file permissions or disk space",
-            output_path,
-        )
+        logger.warning("Failed to export report to %s", output_path)
         raise
 
 
-# Impact: Provides a unified reporting layer that bridges benchmark execution results
-# into actionable, copy-paste ready remediation guides and machine-readable SARIF/JSON
-# outputs for GRC automation, with secret redaction, atomic writes, and operational hints.
+# Impact: Adds optional, non-breaking GRC platform export integration gated by ENABLE_GRC_EXPORT-compatible config.

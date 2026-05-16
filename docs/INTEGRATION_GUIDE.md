@@ -27,7 +27,14 @@ This guide explains how to connect ShieldEye ComplianceScan with the ShieldEye e
 1. **Target** — The URL, IP, or asset being evaluated.
 2. **ComplianceScan** — The main orchestrator (`benchmark/engine.py`) loads policies, executes controls, and collects raw findings.
 3. **Core / SurfaceScan** — Optional external data sources. `CoreClient` imports deep scan results from a ShieldEye-Core instance. `SurfaceScanClient` imports surface-level findings (SSL, headers, cookies, privacy, tracking) from ShieldEye-SurfaceScan.
-4. **Report** — Findings are merged, correlated to controls, and exported as JSON or SARIF via `backend/reporting/exporters.py`.
+4. **Report** — Findings are merged, correlated to controls, and exported as JSON or SARIF via `reporting/generator.py`.
+
+### GRC Payload Formatting (Phase 4 MVP)
+
+When `ENABLE_GRC_EXPORT=true`, report generation can also format platform-specific payloads for webhook delivery via `reporting/grc_payload_formatters.py`.
+
+- **Current scope (Phase 4):** payload shaping + webhook dispatch with retry/backoff.
+- **Deferred scope (Phase 5):** direct authenticated vendor API transport (ServiceNow/Drata/Vanta).
 
 ---
 

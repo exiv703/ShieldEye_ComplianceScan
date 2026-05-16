@@ -100,5 +100,3 @@ class TestScanDatabase:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-
-# Impact: Correct database imports ensure persistence tests validate the production storage layer, supporting reliable compliance audit trails.

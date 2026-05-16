@@ -24,11 +24,7 @@ def run_scan(
     user_agent: Optional[str] = None,
     logger_instance: Optional[logging.Logger] = None,
 ) -> Dict[str, Any]:
-    """Run a compliance scan and return raw results.
-
-    This is the main public entrypoint for non-GUI code.
-    It is a thin wrapper around ``Scanner.run_scan``.
-    """
+    """Public backend entrypoint for running a scan."""
 
     if standards is None:
         standards = []
@@ -72,12 +68,7 @@ def generate_pdf_report(
     scan_duration: float,
     output_path: str,
 ) -> tuple[bool, Optional[str]]:
-    """Generate a PDF report for given scan results.
-
-    Returns ``(success, message)``.
-    On success, ``message`` is ``None``.
-    On failure, ``message`` contains a human-readable error.
-    """
+    """Generate PDF report and return (success, message)."""
 
     reporter = Reporter(url, scan_results, scan_duration)
     success, message = reporter.generate_pdf(output_path)
@@ -85,16 +76,11 @@ def generate_pdf_report(
         logger.info("Report generated", extra={"output_path": output_path})
     else:
         logger.warning(
-            "Report generation failed", extra={"output_path": output_path, "reason": message}
+            "Report generation failed",
+            extra={"output_path": output_path, "reason": message},
         )
     return success, message
 
 
 def analyze_scan_results(scan_results: Dict[str, Any]) -> AnalysisResult:
-    """Run standardized analysis over raw scan results.
-
-    This is a thin wrapper around :func:`analysis.analyze_results` for
-    consumers that prefer to depend only on the backend module.
-    """
-
     return analyze_results(scan_results)

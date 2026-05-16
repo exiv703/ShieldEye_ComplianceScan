@@ -1,4 +1,4 @@
-"""Typed client for importing scan results from ShieldEye-Core."""
+"""HTTP client for pulling completed scans from ShieldEye-Core safely."""
 
 # mypy: ignore-errors
 
@@ -62,7 +62,6 @@ class CoreClient:
 
     @staticmethod
     def _validate_base_url(url: str, allow_internal: bool = False) -> str:
-        # Why block localhost? Prevents SSRF attacks via malicious target URLs
         if not url or not isinstance(url, str):
             raise ValueError("base_url must be a non-empty string")
 
@@ -80,14 +79,15 @@ class CoreClient:
             hostname = parsed.hostname or ""
             if hostname in ("localhost", "127.0.0.1", "::1"):
                 raise ValueError("Localhost and private IP addresses are not allowed")
+            ip_obj = None
             try:
-                ip = ipaddress.ip_address(hostname)
-                if ip.is_private or ip.is_loopback or ip.is_link_local:
-                    raise ValueError(
-                        "Localhost and private IP addresses are not allowed"
-                    )
+                ip_obj = ipaddress.ip_address(hostname)
             except ValueError:
                 pass
+            if ip_obj is not None and (
+                ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local
+            ):
+                raise ValueError("Localhost and private IP addresses are not allowed")
 
         return url.rstrip("/")
 
@@ -97,8 +97,7 @@ class CoreClient:
             response = self.session.get(url, timeout=self.timeout)
         except requests.Timeout:
             logger.warning(
-                "Core API timeout for %s. hint: check network connectivity or increase timeout",
-                scan_id,
+                "Core API timeout for %s — check network or increase timeout", scan_id
             )
             return None
         except requests.RequestException as exc:
@@ -106,10 +105,7 @@ class CoreClient:
             return None
 
         if response.status_code == 404:
-            logger.warning(
-                "Core scan %s not found (404). hint: verify scan_id exists in Core instance",
-                scan_id,
-            )
+            logger.warning("Core scan %s not found (404)", scan_id)
             return None
 
         response.raise_for_status()
@@ -117,19 +113,13 @@ class CoreClient:
         try:
             data = response.json()
         except ValueError:
-            logger.warning(
-                "Core API returned invalid JSON for %s. hint: verify API version compatibility",
-                scan_id,
-            )
+            logger.warning("Core API returned invalid JSON for %s", scan_id)
             return None
 
         try:
             result = CoreScanResult.model_validate(data)
         except Exception:
-            logger.warning(
-                "Core API returned unexpected schema for %s. hint: verify API version compatibility",
-                scan_id,
-            )
+            logger.warning("Core API returned unexpected schema for %s", scan_id)
             return None
 
         logger.info(
@@ -145,10 +135,7 @@ class CoreClient:
             response = self.session.get(url, timeout=self.timeout)
             response.raise_for_status()
         except requests.Timeout:
-            logger.warning(
-                "Core API timeout for list_recent_scans. "
-                "hint: check network connectivity or increase timeout"
-            )
+            logger.warning("Core API timeout for list_recent_scans")
             return []
         except requests.RequestException as exc:
             logger.warning("Core API request failed for list_recent_scans: %s", exc)
@@ -157,10 +144,7 @@ class CoreClient:
         try:
             data = response.json()
         except ValueError:
-            logger.warning(
-                "Core API returned invalid JSON for list_recent_scans. "
-                "hint: verify API version compatibility"
-            )
+            logger.warning("Core API returned invalid JSON for list_recent_scans")
             return []
 
         if not isinstance(data, list):
@@ -174,14 +158,7 @@ class CoreClient:
             try:
                 results.append(CoreScanResult.model_validate(item))
             except Exception:
-                logger.warning(
-                    "Core API returned unexpected schema for item. "
-                    "hint: verify API version compatibility"
-                )
+                logger.warning("Core API returned unexpected schema for item")
                 continue
 
         return results
-
-
-# Impact: CoreClient enables importing scan results from ShieldEye-Core into ComplianceScan,
-# providing the data contract layer needed for compliance control correlation.
