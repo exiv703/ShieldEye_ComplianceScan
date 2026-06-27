@@ -2,84 +2,88 @@
 
 # 🛡️ ShieldEye ComplianceScan
 
-**Compliance and vulnerability scanner for GDPR, PCI-DSS and ISO 27001**
+**Web compliance and vulnerability scanner**
 
-GTK desktop UI and a REST API, with JSON/SARIF reporting.
+*GDPR • PCI-DSS • ISO 27001, with a GTK4 desktop UI, a REST API, and JSON/SARIF reporting*
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python](https://img.shields.io/badge/Python-3.10--3.13-blue?logo=python&logoColor=white)](https://www.python.org/)
-[![GTK4](https://img.shields.io/badge/GTK-4.0-4A86CF?logo=gtk&logoColor=white)](https://www.gtk.org/)
-[![Arch Linux](https://img.shields.io/badge/Arch-Linux-1793D1?logo=arch-linux&logoColor=white)](https://archlinux.org/)
-[![Fedora](https://img.shields.io/badge/Fedora-RHEL-294172?logo=fedora&logoColor=white)](https://getfedora.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-1F6FEB?style=for-the-badge&labelColor=22272E)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/Python-3.10--3.13-1F6FEB?logo=python&logoColor=white&style=for-the-badge&labelColor=22272E)](https://www.python.org/)
+[![GTK4](https://img.shields.io/badge/GTK-4.0-1F6FEB?logo=gtk&logoColor=white&style=for-the-badge&labelColor=22272E)](https://www.gtk.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-REST_API-1F6FEB?logo=fastapi&logoColor=white&style=for-the-badge&labelColor=22272E)](https://fastapi.tiangolo.com/)
 
-[Features](#-key-features) • [Quick Start](#-quick-start) • [Screenshots](#-screenshots) • [Architecture](#-architecture) • [Contributing](#-contributing)
+[Features](#features) • [Quick Start](#quick-start) • [Screenshots](#screenshots) • [Architecture](#architecture) • [API](#api) • [Contributing](#contributing)
 
 ---
 
-<!-- Hero Screenshot: Main Dashboard View -->
 ![ShieldEye ComplianceScan Dashboard](docs/screenshots/dashboard.png)
 
 </div>
 
 ---
 
-## 🎯 What is ShieldEye ComplianceScan?
+## What is ShieldEye ComplianceScan?
 
-ShieldEye ComplianceScan is a **comprehensive security and compliance scanning platform** designed for enterprise environments. It combines:
+ComplianceScan checks a web target against common security baselines and maps
+the findings onto compliance standards. It inspects TLS configuration, security
+headers, and cookie flags, then evaluates the result against GDPR, PCI-DSS, and
+ISO 27001 control sets and produces a report with CVSS v3.1-scored findings.
 
-- 🔒 **Deep vulnerability scanning** with SSL/TLS, headers, and cookie analysis
-- 📋 **Multi-standard compliance** (GDPR, PCI-DSS, ISO 27001, HIPAA)
-- 🖥️ **Native GTK4 desktop interface** for intuitive operation
-- 📊 **Professional PDF reporting** with CVSS v3.1 scoring
+You can drive it three ways: a GTK4 desktop app for interactive use, a CLI for
+local and scripted runs, and a FastAPI REST service for integration. Results are
+persisted to SQLite and can be exported as JSON, SARIF, CSV, XML, Markdown, or
+PDF.
 
-Whether you're a security professional, compliance officer, or DevSecOps engineer, ShieldEye provides actionable insights into your web application's security posture.
+It's meant for the recurring "is this site configured sanely, and where does it
+sit against the standards we care about" check, not a substitute for a full
+audit or a manual pentest. HIPAA mapping exists but is partial.
+
+> ⚠️ **Authorized use only.** Only scan systems you own or have explicit written
+> permission to test.
 
 ---
 
-## ✨ Key Features
+## Features
 
 <table>
 <tr>
 <td width="50%">
 
-### � Security Scanning
-- **SSL/TLS Analysis:** Certificate validation, cipher strength, protocol versions
-- **Security Headers:** CSP, HSTS, X-Frame-Options, CORS validation
-- **Cookie Security:** Secure, HttpOnly, SameSite flag verification
-- **Technology Detection:** Outdated libraries and frameworks
-- **Form Security:** Autocomplete, HTTPS enforcement checks
+### Security scanning
+- **TLS/SSL:** certificate validity, cipher strength, protocol versions
+- **Security headers:** CSP, HSTS, X-Frame-Options, CORS
+- **Cookies:** `Secure`, `HttpOnly`, `SameSite`
+- **Tech detection:** outdated libraries and frameworks
+- **Forms:** autocomplete and HTTPS-enforcement checks
 
 </td>
 <td width="50%">
 
-### 📋 Compliance Validation
-- **GDPR:** Privacy policy detection, cookie consent
-- **PCI-DSS:** Payment form security, password handling
-- **ISO 27001:** Security.txt, incident response
-- **HIPAA:** Healthcare data protection standards
-- **Multi-standard:** Simultaneous compliance checking
+### Compliance mapping
+- **GDPR:** privacy-policy detection, cookie consent
+- **PCI-DSS:** payment-form and password handling
+- **ISO 27001:** `security.txt`, incident-response signals
+- **HIPAA:** partial healthcare-data checks
+- **Multi-standard:** several standards in one pass
 
 </td>
 </tr>
 <tr>
 <td width="50%">
 
-### 🖥️ Modern Interface
-- **GTK4 Desktop GUI:** Native, responsive interface
-- **Real-time Dashboard:** Live metrics and threat overview
-- **Scan History:** Complete audit trail with filtering
-- **Visual Reports:** Charts, graphs, and severity breakdown
-- **Dark Theme:** Professional, eye-friendly design
+### Interfaces
+- **GTK4 desktop app** with a dark theme
+- **CLI** for local and scripted scans
+- **FastAPI REST API** with OpenAPI/Swagger docs
+- **Dashboard + history** with filtering
 
 </td>
 <td width="50%">
 
-### 📊 Enterprise Features
-- **CVSS v3.1 Scoring:** Industry-standard risk assessment
-- **PDF Reports:** Professional, branded documentation
-- **REST API:** FastAPI with OpenAPI/Swagger docs
-- **Database Persistence:** SQLite with full history
-- **Multi-format Export:** JSON, CSV, XML, SARIF, Markdown
+### Scoring & reporting
+- **CVSS v3.1** severity scoring
+- **PDF reports** via wkhtmltopdf
+- **Exports:** JSON, SARIF, CSV, XML, Markdown
+- **SQLite persistence** with full scan history
 
 </td>
 </tr>
@@ -87,371 +91,210 @@ Whether you're a security professional, compliance officer, or DevSecOps enginee
 
 ---
 
-## 🖼️ Screenshots
+## Screenshots
 
 <div align="center">
 
 | Dashboard | New Scan | History |
 |:---------:|:--------:|:-------:|
 | ![Dashboard](docs/screenshots/dashboard.png) | ![New Scan](docs/screenshots/new-scan.png) | ![History](docs/screenshots/history.png) |
-| *Real-time compliance overview and metrics* | *Configure and launch security scans* | *Complete scan audit trail with filtering* |
+| *Compliance overview and metrics* | *Configure and launch a scan* | *Scan audit trail with filtering* |
 
 </div>
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
-ShieldEye ComplianceScan uses a **modular architecture** for maintainability and extensibility:
+A modular Python backend shared by three frontends (GTK, CLI, REST):
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                     GTK4 Desktop GUI                          │
-│                  (Python 3 + PyGObject)                       │
+│           GTK4 GUI  •  CLI  •  FastAPI REST API               │
 └─────────────────────────────┬────────────────────────────────┘
-                              │ Direct API
                               ▼
 ┌──────────────────────────────────────────────────────────────┐
 │                      Backend Core                             │
 │              Scanner • Analyzer • Reporter                    │
 └───────┬─────────────────────┬─────────────────────┬──────────┘
-        │                     │                     │
         ▼                     ▼                     ▼
 ┌───────────────┐    ┌───────────────┐    ┌───────────────┐
 │   Scanner     │    │   Analyzer    │    │   Reporter    │
-│  (requests)   │    │ (Compliance)  │    │   (PDF/CSV)   │
+│  (requests)   │    │ (Compliance)  │    │ (PDF/SARIF…)  │
 └───────────────┘    └───────────────┘    └───────────────┘
-        │                     │                     │
         └──────────┬──────────┴─────────────────────┘
                    ▼
-    ┌─────────────────────────────────┐
-    │        SQLite Database           │
-    │   (Scans • Findings • History)   │
-    └─────────────────────────────────┘
+        ┌─────────────────────────────┐
+        │        SQLite Database       │
+        │  Scans • Findings • History  │
+        └─────────────────────────────┘
 ```
 
 ### Tech Stack
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.12%2B-blue?logo=python&logoColor=white" alt="Python" />
-  <img src="https://img.shields.io/badge/PyQt6-UI-green?logo=qt&logoColor=white" alt="PyQt6" />
-  <img src="https://img.shields.io/badge/FastAPI-REST_API-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
-  <img src="https://img.shields.io/badge/Docker-Containerized-2496ED?logo=docker&logoColor=white" alt="Docker" />
-  <img src="https://img.shields.io/badge/BeautifulSoup-4.x-yellow?logo=beautifulsoup&logoColor=white" alt="BeautifulSoup" />
-  <img src="https://img.shields.io/badge/requests-2.x-0052CC?logo=python&logoColor=white" alt="requests" />
-  <img src="https://img.shields.io/badge/networkx-2.x-00B894?logo=python&logoColor=white" alt="networkx" />
-  <img src="https://img.shields.io/badge/matplotlib-3.x-1158c7?logo=python&logoColor=white" alt="matplotlib" />
-  <img src="https://img.shields.io/badge/pdfkit-1.x-FFB74D?logo=python&logoColor=white" alt="pdfkit" />
-</p>
+| Layer | Technology |
+|-------|------------|
+| **GUI** | GTK4 + libadwaita, PyGObject |
+| **API** | FastAPI, Uvicorn |
+| **Scanning** | requests, BeautifulSoup4 |
+| **Reporting** | wkhtmltopdf (PDF), SARIF/CSV/XML/Markdown exporters |
+| **Storage** | SQLite |
 
+---
 
-## � Quick Start
+## Quick Start
 
 ### Prerequisites
 
 | Requirement | Version | Notes |
 |-------------|---------|-------|
-| Python | 3.10+ | Tested on 3.10, 3.11, 3.12, 3.13 |
-| GTK4 | 4.0+ | With PyGObject bindings |
-| Linux | Any | Arch, Fedora, RHEL recommended |
-| wkhtmltopdf | Latest | For PDF report generation |
+| Python | 3.10–3.13 | |
+| GTK4 + libadwaita | 4.0+ | system package, with PyGObject |
+| wkhtmltopdf | recent | only for PDF reports |
+| Linux | - | tested on Arch, Fedora/RHEL |
 
-### 1. Clone and Setup
+### 1. Install system dependencies
+
+GTK and PyGObject come from your distro, not pip:
+
+```bash
+# Arch
+sudo pacman -S python-gobject gtk4 libadwaita wkhtmltopdf
+
+# Fedora / RHEL
+sudo dnf install python3-gobject gtk4 libadwaita wkhtmltopdf
+```
+
+### 2. Get the code and install Python deps
 
 ```bash
 git clone https://github.com/exiv703/ShieldEye_ComplianceScan.git
 cd ShieldEye_ComplianceScan
-
-# Create virtual environment
 python -m venv .venv
 source .venv/bin/activate
-```
-
-### 2. Install Dependencies
-
-**Automated (Recommended):**
-```bash
-# Run the interactive launcher
-./run.sh
-
-# Select option 3: Install dependencies
-```
-
-**Manual Installation:**
-**On Arch Linux:**
-```bash
-sudo pacman -S python-gobject gtk4 libadwaita wkhtmltopdf
 pip install -r requirements.txt
 ```
 
-**On Fedora/RHEL:**
+Or use the interactive launcher, which handles dependency install for you:
+
 ```bash
-sudo dnf install python3-gobject gtk4 libadwaita wkhtmltopdf
-pip install -r requirements.txt
+./run.sh
 ```
 
-### 3. Launch the Application
+### 3. Launch
 
 ```bash
-# Interactive launcher with menu
-./run.sh
-
-# Or directly
-python main_gtk.py
+./run.sh             # interactive menu
+python main_gtk.py   # GUI directly
 ```
 
 ---
 
-## 🎮 Using `run.sh`
-
-The interactive launcher provides a user-friendly menu:
+## CLI
 
 ```bash
-./run.sh
-```
-
-**Menu Options:**
-1. 🚀 **Run ShieldEye ComplianceScan** - Launch the GUI application
-2. 🗄️ **Reset history & local data** - Clear database and cache
-3. 📦 **Install dependencies** - Automated dependency installation
-4. 👋 **Exit** - Close the launcher
-
-### CLI Interface
-
-```bash
-# Run a scan
+# Run a scan and save it to the database
 python -m backend.cli.advanced scan https://example.com --save-db
 
-# View scan history
+# View recent scans
 python -m backend.cli.advanced history --limit 10
 
-# Health check
+# Compare two scans
+python -m backend.cli.advanced compare <scan-id-a> <scan-id-b>
+
+# Health and database stats
 python -m backend.cli.advanced health
+python -m backend.cli.advanced stats
 ```
 
+---
 
-## ⚙️ Configuration
+## Configuration
 
-### Environment Variables
+Paths are overridable via environment variables:
 
 ```bash
-# Database location
 export SHIELDEYE_DB_PATH="$HOME/.shieldeye/scans.db"
-
-# Log directory
 export SHIELDEYE_LOG_DIR="$HOME/.shieldeye/logs"
-
-# Reports output
 export SHIELDEYE_REPORTS_DIR="$HOME/.shieldeye/reports"
 ```
 
-### Full Requirements
+A few capabilities are gated behind flags (defaults are safe):
 
-- **Python 3.10+** with pip and venv
-- **GTK4** with libadwaita
-- **PyGObject** (python3-gobject)
-- **wkhtmltopdf** for PDF generation
-- **SQLite3** (usually pre-installed)
+| Flag | Default | Description |
+|------|---------|-------------|
+| `COMPLIANCE_BENCHMARKS_ENABLED` | `true` | CIS/PCI-DSS/SOC2 benchmark execution |
+| `SHIELDEYE_ALLOW_INSECURE_TARGETS` | `false` | Permit scanning targets with invalid TLS (internal use) |
+| `ENABLE_REMEDIATION_SNIPPETS` | `true` | Include copy-paste fix commands in reports |
+
+Production toggles (Redis-backed rate limiting, Prometheus export, ML
+correlation) live in `.env.example` and are documented in
+[`docs/MIGRATION_GUIDE.md`](docs/MIGRATION_GUIDE.md). Version history is in
+[`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 
-## 🛠️ Development
+## API
 
-### Local Setup (without Docker)
+The REST API ships with OpenAPI/Swagger docs. Scan and config routes require a
+Bearer token; health and template lookups are open.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/scans` | Create and queue a compliance scan |
+| `GET` | `/scans` | List recent scans (with filtering) |
+| `GET` | `/scans/{id}` | Scan details and findings |
+| `DELETE` | `/scans/{id}` | Remove a scan and its findings |
+| `GET` | `/scans/{id}/export?format=sarif` | Export results (json, csv, xml, sarif, markdown) |
+| `GET` | `/templates` · `/templates/{name}` | Scan templates |
+| `POST` | `/schedules` · `GET` `/schedules` | Recurring scan schedules |
+| `POST` | `/webhooks/subscribe` · `GET` `/webhooks` | Scan-completion webhooks |
+| `GET` | `/stats` | Aggregated scan statistics |
+| `GET` | `/health` | Service health and dependency checks |
+
+See [`docs/INTEGRATION_GUIDE.md`](docs/INTEGRATION_GUIDE.md) for the Core /
+SurfaceScan data flow.
+
+---
+
+## Development
 
 ```bash
-# Clone and setup
-git clone https://github.com/exiv703/ShieldEye_ComplianceScan.git
-cd ShieldEye_ComplianceScan
-
-# Create virtual environment
 python -m venv .venv
 source .venv/bin/activate
-
-# Install dependencies
 pip install -r requirements.txt
-```
 
-### Running Tests
-
-```bash
-# Run all tests
+# Tests (113 across scanner, policy, integrations, reporting, …)
 pytest tests/ -v
-
-# Run with coverage
 pytest tests/ --cov=backend --cov-report=html
 ```
 
-### Seeding Demo Data
-
-```bash
-# Populate database with realistic demo scans
-python scripts/seed_demo_data.py
-```
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Beyond the basics, the backend also carries a policy-as-code engine
+(`policy/validator.py`), control-mapping benchmarks (`benchmark/engine.py`),
+typed Core/SurfaceScan integration clients (`integrations/`), and optional
+resilience/observability hooks (`backend/utils/`). See [`CHANGELOG.md`](CHANGELOG.md)
+for what landed when.
 
 ---
 
-## Feature Flags
+## Contributing
 
-| Flag | Default | Description | MVP Scope |
-|------|---------|-------------|-----------|
-| COMPLIANCE_BENCHMARKS_ENABLED | true | Enable CIS/PCI-DSS/SOC2 benchmark execution | ✅ Yes |
-| ALLOW_INSECURE_TARGETS | false | Permit scanning targets with invalid TLS (internal only) | ✅ Yes |
-| ENABLE_REMEDIATION_SNIPPETS | true | Include copy-paste ready fix commands in reports | ✅ Yes |
-
-## Remediation Snippets
-
-```bash
-# CIS 4.1.3: Ensure auditd is configured
-# Generated by ShieldEye-ComplianceScan v0.1.0
-sudo apt install auditd -y
-sudo augenrules --load
-sudo systemctl enable --now auditd
-```
-
-## Phase 2 Capabilities
-
-- **Policy-as-code:** YAML/Rego parsing with `control_id` validation (`policy/validator.py`)
-- **Control mapping:** CIS/PCI-DSS/SOC2/GDPR registries + remediation templates (`benchmark/engine.py`)
-- **Async execution:** Idempotent, retry-aware benchmark orchestration (`benchmark/orchestrator.py`)
-- **Integrations:** Typed clients for Core + SurfaceScan with SSRF-safe validation (`integrations/core_client.py`, `integrations/surfacescan_client.py`)
-- **Reporting:** Copy-paste remediation snippets + JSON/SARIF export (`backend/reporting/exporters.py`)
-
-## Phase 3 Capabilities
-
-- **Resilience hardening:** Per-target rate limiting and circuit-breaker protections for upstream dependencies (`backend/utils/resilience.py`)
-- **Observability:** `MetricsCollector` telemetry, Prometheus export toggle, and `trace_span` tracing hooks (`backend/utils/observability.py`)
-- **Advanced correlation:** `CorrelationEngine` with heuristic + optional ML backend and tunable `confidence_threshold` (`integrations/correlation.py`)
-
-## Production Deployment
-
-- **Redis configuration:** Set `SHIELDEYE_REDIS_URL` to a highly available Redis instance to enforce distributed rate limits consistently across workers.
-- **Prometheus scraping:** Start with `scrape_interval: 15s` for production visibility, then tune based on cardinality and ingestion cost.
-- **ML correlation resources:** Enable `ENABLE_ML_CORRELATION` only on nodes sized for embedding inference; keep heuristic fallback enabled for graceful degradation.
-
-## v1.0.0 Release Highlights
-
-- Scanner, policy engine, integrations and reporting pipeline across `backend/`, `policy/` and `reporting/`.
-- Policy-as-code: YAML/Rego validation, control mapping and idempotent async execution (`policy/validator.py`, `benchmark/engine.py`, `benchmark/orchestrator.py`).
-- Typed ShieldEye-Core/SurfaceScan clients with a deterministic correlation fallback in `integrations/`.
-- Optional Redis-backed resilience, observability hooks and monitoring endpoints (`backend/utils/resilience.py`, `backend/utils/observability.py`, `api/routes/monitoring.py`).
-- Structured environment handling and runtime config validation in `backend/utils/config.py`.
-
-## Migration Guide: v0.4.0-rc1 → v1.0.0
-
-### Breaking changes
-
-- None.
-
-### Configuration updates
-
-- Keep existing `SHIELDEYE_DB_URL` and `SHIELDEYE_REDIS_URL`; no rename required.
-- Add/verify policy and monitoring controls:
-  - `ENABLE_POLICY_CACHE`
-  - `SHIELDEYE_ENABLE_REALTIME_MONITORING`
-  - `SHIELDEYE_ALERT_WINDOW_SECONDS`
-- Optional production toggles (default safe/off):
-  - `SHIELDEYE_ENABLE_PROMETHEUS_EXPORT`
-  - `SHIELDEYE_ENABLE_OPENTELEMETRY`
-  - `SHIELDEYE_ENABLE_INTERACTIVE_REMEDIATION`
-  - `ENABLE_GRC_EXPORT`
-
-### Upgrade steps
-
-1. Pull the GA release and reinstall dependencies:
-
-```bash
-git fetch --tags
-git checkout v1.0.0
-pip install -r requirements.txt
-```
-
-2. Refresh environment configuration from `.env.example`:
-
-```bash
-cp .env.example .env
-# re-apply environment-specific values (DB URL, Redis URL, webhook endpoints)
-```
-
-3. Validate core flags and run tests:
-
-```bash
-pytest tests/ -v
-python -m backend.cli.advanced health
-```
-
-4. Run a smoke scan and verify exports/monitoring paths:
-
-```bash
-python -m backend.cli.advanced scan https://example.com --save-db
-python -m backend.cli.advanced history --limit 5
-```
-
-5. For detailed troubleshooting and rollout notes, see `docs/MIGRATION_GUIDE.md`.
-
-## API Surface
-
-> **MVP note:** All endpoints require Bearer token authentication. CLI access is available for local/development workflows.
-
-| Method | Endpoint | Description | Permission |
-|--------|----------|-------------|------------|
-| `POST` | `/scans` | Create and queue a new compliance scan | `scan:write` |
-| `GET`  | `/scans` | List recent scans with filtering | `scan:read` |
-| `GET`  | `/scans/{id}` | Retrieve scan details and findings | `scan:read` |
-| `DELETE` | `/scans/{id}` | Remove a scan and its findings | `scan:delete` |
-| `GET`  | `/scans/{id}/export?format=sarif` | Export scan results (json, csv, xml, sarif, markdown) | `scan:read` |
-| `GET`  | `/health` | Service health and dependency checks | - |
-| `GET`  | `/templates` | List available scan templates | - |
-| `GET`  | `/templates/{name}` | Get template configuration | - |
-| `POST` | `/schedules` | Create a recurring scan schedule | `scan:write` |
-| `GET`  | `/schedules` | List active scan schedules | `scan:read` |
-| `DELETE` | `/schedules/{id}` | Cancel a scheduled scan | `scan:write` |
-| `POST` | `/webhooks/subscribe` | Subscribe to scan-completion events | `config:write` |
-| `GET`  | `/webhooks` | List webhook subscriptions | `config:write` |
-| `POST` | `/users` | Create a new user account | `user:manage` |
-| `POST` | `/api-keys` | Generate a scoped API key | - |
-| `GET`  | `/stats` | Aggregated scan statistics | `scan:read` |
-
-## Integration Diagram
-
-See `docs/INTEGRATION_GUIDE.md` for Core/SurfaceScan data flow.
-
-## Future Roadmap (Post-v1.0.0)
-
-- **ML correlation calibration:** Environment-specific threshold tuning, model evaluation loops, and confidence quality dashboards
-- **GRC API clients:** Native vendor API transports in addition to current payload formatting/webhook patterns
-- **Policy UI:** Guided policy authoring, schema linting, and approval workflows for collaborative governance
+1. Fork and branch off `main`.
+2. Keep changes scoped and add tests for new scanner or compliance logic.
+3. Make sure `pytest` passes before opening a PR.
 
 ---
 
-## 📜 License
+## License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- Built with [GTK4](https://www.gtk.org/) and [libadwaita](https://gnome.pages.gitlab.gnome.org/libadwaita/)
-- Powered by [Python](https://www.python.org/) and [PyGObject](https://pygobject.readthedocs.io/)
-- Security scanning inspired by industry best practices
+MIT - see [LICENSE](LICENSE).
 
 ---
 
-<div align="center">
+## Related Projects
 
-**[⬆ Back to Top](#-shieldeye-compliancescan)**
+Part of the **ShieldEye** toolkit:
 
-</div>
-
-# Impact: Clear release notes + migration path enable safe adoption of v1.0.0 in production environments.
+- **[ShieldEye Core](https://github.com/exiv703/ShieldEye-Core)** - network security scanner (Nmap + GTK4)
+- **[ShieldEye SurfaceScan](https://github.com/exiv703/ShieldEye-SurfaceScan)** - web attack-surface mapper
+- **[ShieldEye NeuralScan](https://github.com/exiv703/ShieldEye-NeuralScan)** - local source-code security scanner
