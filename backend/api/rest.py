@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from pathlib import Path
-import asyncio
 import logging
 import json
 import hashlib
@@ -36,7 +35,6 @@ from ..security.auth import get_auth_manager, AuthenticationError, Authorization
 from ..utils.config import get_config, validate_config_at_startup
 from ..reporting.exporters import export_scan
 from ..utils.scan_templates import get_template_manager
-from ..integrations.comparison import compare_scan_results
 from ..integrations.scheduler import get_scheduler, ScheduleFrequency
 from ..integrations.webhooks import get_webhook_manager, WebhookEvent
 from ..utils.monitoring import get_health_checker
@@ -112,7 +110,7 @@ class WebhookSubscribe(BaseModel):
 if FASTAPI_AVAILABLE:
     app = FastAPI(
         title="ShieldEye ComplianceScan API",
-        description="Production-grade security compliance scanning API",
+        description="ShieldEye ComplianceScan REST API",
         version="1.0.0",
         docs_url="/docs",
         redoc_url="/redoc",
@@ -233,16 +231,12 @@ if FASTAPI_AVAILABLE:
                 with db._get_connection() as conn:
                     cursor = conn.cursor()
 
-                    idempotency_key = hashlib.sha256(
-                        f"{request.idempotency_key}:{request.url}".encode("utf-8")
-                    ).hexdigest()
                     if request.idempotency_key:
                         cursor.execute(
                             """
                             SELECT s.scan_id
                             FROM scans s
                             JOIN scan_metadata sm ON sm.scan_id = s.scan_id
-                            WHERE sm.key = 'idempotency_key_hash'
                             WHERE sm.key = ?
                               AND sm.value = ?
                               AND s.url = ?

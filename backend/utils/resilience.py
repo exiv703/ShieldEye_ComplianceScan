@@ -6,7 +6,12 @@ import time
 from enum import Enum
 from typing import Any, Callable
 
-import redis.asyncio as redis
+try:
+    import redis.asyncio as redis
+except ImportError:
+    # redis is optional: rate limiting degrades to allow-all and the circuit
+    # breaker stays in-process. Only distributed rate limiting needs it.
+    redis = None  # type: ignore[assignment]
 
 from backend.utils.config import get_config
 from backend.utils.logging_config import get_logger
@@ -71,6 +76,9 @@ class CircuitBreaker:
         self.failure_count = 0
         self.last_failure_time = 0.0
         self._lock = asyncio.Lock()
+        # Keep strong references to fire-and-forget on_open tasks so the event
+        # loop does not garbage-collect them mid-flight (see asyncio docs).
+        self._background_tasks: set[asyncio.Task[None]] = set()
 
     async def execute(
         self, func: Callable[..., Any] | Any, *args: Any, **kwargs: Any
@@ -99,7 +107,9 @@ class CircuitBreaker:
                     if self.state != CircuitState.OPEN:
                         self.state = CircuitState.OPEN
                         if self.on_open:
-                            asyncio.create_task(self._invoke_on_open())
+                            task = asyncio.create_task(self._invoke_on_open())
+                            self._background_tasks.add(task)
+                            task.add_done_callback(self._background_tasks.discard)
             raise
 
         async with self._lock:
@@ -124,6 +134,8 @@ _redis_client: redis.Redis | None = None
 
 async def get_redis_client() -> redis.Redis | None:
     global _redis_client
+    if redis is None:
+        return None
     if _redis_client is None:
         config = get_config()
         if config.redis_url is not None:

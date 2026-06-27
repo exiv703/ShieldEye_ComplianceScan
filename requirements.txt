@@ -49,3 +49,7 @@ fastapi>=0.104.0
 uvicorn>=0.24.0
 pydantic>=2.5.0
 pyyaml>=6.0
+
+# Distributed rate limiting (optional). Without it, rate limiting degrades to
+# in-process and allow-all; see backend/utils/resilience.py.
+# redis>=5.0.0

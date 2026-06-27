@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Any
 import logging
 
 from ..core.analysis import AnalysisResult, FindingDetail
@@ -284,106 +284,128 @@ class ComplianceReportGenerator:
         output_path: Path
     ) -> None:
         
-        html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Compliance Report - {scan_results.get('start_url', 'N/A')}</title>
-    <style>
-        body {{ font-family: Arial, sans-serif; margin: 40px; background:
-        .container {{ max-width: 1200px; margin: 0 auto; background: white; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
-        h1 {{ color:
-        h2 {{ color:
-        h3 {{ color:
-        .executive-summary {{ background:
-        .risk-high {{ color:
-        .risk-medium {{ color:
-        .risk-low {{ color:
-        .score {{ font-size: 48px; font-weight: bold; color:
-        .status-compliant {{ color:
-        .status-partial {{ color:
-        .status-non-compliant {{ color:
-        .finding {{ background:
-        .finding-critical {{ border-left-color:
-        .finding-high {{ border-left-color:
-        .finding-medium {{ border-left-color:
-        .finding-low {{ border-left-color:
-        table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
-        th, td {{ padding: 12px; text-align: left; border-bottom: 1px solid
-        th {{ background:
-        .metadata {{ color:
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Security Compliance Report</h1>
-        <div class="metadata">
-            <p><strong>URL:</strong> {scan_results.get('start_url', 'N/A')}</p>
-            <p><strong>Scan ID:</strong> {scan_results.get('scan_id', 'N/A')}</p>
-            <p><strong>Date:</strong> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}</p>
-            <p><strong>Standards:</strong> {', '.join(scan_results.get('standards', []))}</p>
-        </div>
-        
-        <div class="executive-summary">
-            <h2>Executive Summary</h2>
-            <p><strong>Overall Status:</strong> {exec_summary.overall_status}</p>
-            <p><strong>Risk Level:</strong> <span class="risk-{exec_summary.risk_level.lower().replace('-', '')}">{exec_summary.risk_level}</span></p>
-            <p><strong>Compliance Score:</strong> <span class="score">{exec_summary.compliance_score}/100</span></p>
-            <p><strong>Critical Issues:</strong> {exec_summary.critical_issues}</p>
-            
-            <h3>Business Impact</h3>
-            <p>{exec_summary.business_impact}</p>
-            
-            <h3>Key Findings</h3>
-            <ul>
-                {''.join(f'<li>{finding}</li>' for finding in exec_summary.key_findings)}
-            </ul>
-            
-            <h3>Recommendations</h3>
-            <ol>
-                {''.join(f'<li>{rec}</li>' for rec in exec_summary.recommendations)}
-            </ol>
-        </div>
+        from html import escape
 
-        <h2>{standard} Compliance Analysis</h2>
+        def _status_class(status: str) -> str:
+            s = status.lower()
+            if s in ("compliant", "pass", "passed"):
+                return "status-compliant"
+            if s in ("partial", "partially-compliant", "partially compliant"):
+                return "status-partial"
+            return "status-non-compliant"
 
-        <h3>{section.title} - <span class="{status_class}">{section.status.upper()}</span> ({section.score}/100)</h3>
-        
-        <table>
-            <tr>
-                <th>Requirement</th>
-                <th>Status</th>
-                <th>Severity</th>
-            </tr>
+        css = """
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #1a1a2e; }
+        h2 { color: #16213e; border-bottom: 2px solid #e0e0e0; padding-bottom: 8px; }
+        h3 { color: #0f3460; }
+        h4 { color: #0f3460; }
+        .executive-summary { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .risk-high { color: #e74c3c; font-weight: bold; }
+        .risk-medium { color: #f39c12; font-weight: bold; }
+        .risk-low { color: #27ae60; font-weight: bold; }
+        .score { font-size: 48px; font-weight: bold; color: #0f3460; }
+        .status-compliant { color: #27ae60; }
+        .status-partial { color: #f39c12; }
+        .status-non-compliant { color: #e74c3c; }
+        .finding { background: #fafafa; border-left: 4px solid #ccc; padding: 12px; margin: 12px 0; }
+        .finding-critical { border-left-color: #c0392b; }
+        .finding-high { border-left-color: #e74c3c; }
+        .finding-medium { border-left-color: #f39c12; }
+        .finding-low { border-left-color: #f1c40f; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; }
+        th { background: #0f3460; color: white; }
+        .metadata { color: #777; }
+        """
 
-            <tr>
-                <td>{req['check'].replace('_', ' ').title()}</td>
-                <td>{status_icon} {req['status'].upper()}</td>
-                <td>{req['severity'].upper()}</td>
-            </tr>
+        # Build the document piece by piece so per-section/per-finding loops stay
+        # explicit. All scan-derived values are HTML-escaped to avoid breaking
+        # markup (or injecting it) when findings contain special characters.
+        parts: List[str] = [
+            "<!DOCTYPE html>",
+            '<html lang="en">',
+            "<head>",
+            '    <meta charset="UTF-8">',
+            f"    <title>Compliance Report - {escape(str(scan_results.get('start_url', 'N/A')))}</title>",
+            f"    <style>{css}</style>",
+            "</head>",
+            "<body>",
+            '    <div class="container">',
+            "        <h1>Security Compliance Report</h1>",
+            '        <div class="metadata">',
+            f"            <p><strong>URL:</strong> {escape(str(scan_results.get('start_url', 'N/A')))}</p>",
+            f"            <p><strong>Scan ID:</strong> {escape(str(scan_results.get('scan_id', 'N/A')))}</p>",
+            f"            <p><strong>Date:</strong> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}</p>",
+            f"            <p><strong>Standards:</strong> {escape(', '.join(scan_results.get('standards', [])))}</p>",
+            "        </div>",
+            '        <div class="executive-summary">',
+            "            <h2>Executive Summary</h2>",
+            f"            <p><strong>Overall Status:</strong> {escape(exec_summary.overall_status)}</p>",
+            f'            <p><strong>Risk Level:</strong> <span class="risk-{escape(exec_summary.risk_level.lower().replace("-", ""))}">{escape(exec_summary.risk_level)}</span></p>',
+            f'            <p><strong>Compliance Score:</strong> <span class="score">{exec_summary.compliance_score}/100</span></p>',
+            f"            <p><strong>Critical Issues:</strong> {exec_summary.critical_issues}</p>",
+            "            <h3>Business Impact</h3>",
+            f"            <p>{escape(exec_summary.business_impact)}</p>",
+            "            <h3>Key Findings</h3>",
+            "            <ul>",
+        ]
+        parts.extend(f"                <li>{escape(str(finding))}</li>" for finding in exec_summary.key_findings)
+        parts.extend([
+            "            </ul>",
+            "            <h3>Recommendations</h3>",
+            "            <ol>",
+        ])
+        parts.extend(f"                <li>{escape(str(rec))}</li>" for rec in exec_summary.recommendations)
+        parts.extend([
+            "            </ol>",
+            "        </div>",
+        ])
 
-        </table>
+        for standard, sections in compliance_sections.items():
+            parts.append(f"        <h2>{escape(str(standard))} Compliance Analysis</h2>")
+            for section in sections.values():
+                cls_name = _status_class(section.status)
+                parts.extend([
+                    f'        <h3>{escape(section.title)} - <span class="{cls_name}">{escape(section.status.upper())}</span> ({section.score}/100)</h3>',
+                    "        <table>",
+                    "            <tr><th>Requirement</th><th>Status</th><th>Severity</th></tr>",
+                ])
+                for req in section.requirements:
+                    status_icon = "&#10003;" if req["status"] == "pass" else "&#10007;"
+                    parts.append(
+                        f"            <tr><td>{escape(req['check'].replace('_', ' ').title())}</td>"
+                        f"<td>{status_icon} {escape(req['status'].upper())}</td>"
+                        f"<td>{escape(req['severity'].upper())}</td></tr>"
+                    )
+                parts.append("        </table>")
+                if section.recommendations:
+                    parts.append("        <h4>Recommendations</h4>")
+                    parts.append("        <ul>")
+                    parts.extend(f"            <li>{escape(str(rec))}</li>" for rec in section.recommendations)
+                    parts.append("        </ul>")
 
-        <h4>Recommendations</h4>
-        <ul>
+        parts.append("        <h2>Detailed Findings</h2>")
+        for finding in analysis.findings:
+            if finding.severity == "pass":
+                continue
+            severity = finding.severity.lower()
+            parts.append(f'        <div class="finding finding-{escape(severity)}">')
+            parts.append(f"            <strong>[{escape(finding.severity.upper())}]</strong> {escape(finding.message)}")
+            if finding.location:
+                parts.append(f"            <br><small>Location: {escape(str(finding.location))}</small>")
+            if finding.standards:
+                parts.append(f"            <br><small>Standards: {escape(', '.join(finding.standards))}</small>")
+            parts.append("        </div>")
 
-        </ul>
+        parts.extend([
+            "    </div>",
+            "</body>",
+            "</html>",
+        ])
 
-        <h2>Detailed Findings</h2>
-
-        <div class="finding {severity_class}">
-            <strong>[{finding.severity.upper()}]</strong> {finding.message}
-            {f'<br><small>Location: {finding.location}</small>' if finding.location else ''}
-            {f'<br><small>Standards: {", ".join(finding.standards)}</small>' if finding.standards else ''}
-        </div>
-
-    </div>
-</body>
-</html>
-"""
-        
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(html)
+        Path(output_path).write_text("\n".join(parts), encoding="utf-8")
     
     @staticmethod
     def _generate_markdown_report(

@@ -42,7 +42,12 @@ class Reporter:
                     <span class="severity" style="color: {color};">[{severity_text}]</span>
                     <span class="message">{finding.message}</span>
                 </div>
+                """
 
+        score = self._calculate_score(summary_counts)
+        score_color = self._get_color_for_score(score)
+
+        html = f"""
         <html>
             <head>
                 <meta charset="UTF-8">
@@ -86,7 +91,7 @@ class Reporter:
                         border-left: 5px solid;
                         padding: 10px;
                         margin-bottom: 10px;
-                        background-color:
+                        background-color: {Colors.BACKGROUND_END};
                         border-radius: 5px;
                     }}
                     .finding.critical {{ border-color: {Colors.DANGER}; }}

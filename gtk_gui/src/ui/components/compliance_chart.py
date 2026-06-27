@@ -1,4 +1,6 @@
 
+import math
+
 from gi.repository import Gtk
 import cairo
 
@@ -55,7 +57,7 @@ class ComplianceChart(Gtk.DrawingArea):
             cr.fill()
             
             cr.set_source_rgb(0.61, 0.64, 0.69)
-            cr.select_font_face("Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_MEDIUM)
+            cr.select_font_face("Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
             cr.set_font_size(12)
             
             text_extents = cr.text_extents(label)
