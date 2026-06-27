@@ -28,11 +28,11 @@ def run_command(cmd, check=True):
 
 def install_pip_requirements(files):
 
-    print(f"\n📦 Installing Python dependencies...")
+    print("\n[*] Installing Python dependencies...")
     
     for req_file in files:
         if not os.path.exists(req_file):
-            print(f"⚠️  Warning: {req_file} not found, skipping...")
+            print(f"[WARN] {req_file} not found, skipping...")
             continue
         
         print(f"   Installing from {req_file}...")
@@ -42,15 +42,15 @@ def install_pip_requirements(files):
         )
         
         if not success:
-            print(f"⚠️  Some packages from {req_file} failed to install.")
-            print(f"   This is normal for system packages on Fedora/RHEL.")
+            print(f"[WARN] Some packages from {req_file} failed to install.")
+            print("   This is normal for system packages on Fedora/RHEL.")
             print(f"   Error details: {stderr[:200]}")
         else:
-            print(f"✅ Successfully installed from {req_file}")
+            print(f"[OK] Successfully installed from {req_file}")
 
 def install_arch_system_deps():
 
-    print("\n🔧 Installing Arch Linux system dependencies...")
+    print("\n[*] Installing Arch Linux system dependencies...")
     
     packages = [
         'python-pyqt6',
@@ -65,11 +65,11 @@ def install_arch_system_deps():
     
     print(f"   Recommended packages: {', '.join(packages)}")
     print(f"   Run: sudo pacman -S {' '.join(packages)}")
-    print(f"   (Skipping automatic installation - requires sudo)")
+    print("   (Skipping automatic installation - requires sudo)")
 
 def install_fedora_system_deps():
 
-    print("\n🔧 Installing Fedora/RHEL system dependencies...")
+    print("\n[*] Installing Fedora/RHEL system dependencies...")
     
     packages = [
         'python3-blivet',
@@ -86,48 +86,48 @@ def install_fedora_system_deps():
     
     print(f"   Recommended packages: {', '.join(packages)}")
     print(f"   Run: sudo dnf install {' '.join(packages)}")
-    print(f"   (Skipping automatic installation - requires sudo)")
+    print("   (Skipping automatic installation - requires sudo)")
 
 def main():
     print("=" * 70)
     print("ShieldEye ComplianceScan - Dependency Installer")
     print("=" * 70)
     
-    print(f"\n✓ Python version: {sys.version.split()[0]}")
+    print(f"\n[OK] Python version: {sys.version.split()[0]}")
     
     distro = detect_distro()
     distro_name = get_distro_name()
-    print(f"✓ Detected distribution: {distro_name}")
+    print(f"[OK] Detected distribution: {distro_name}")
     
     if distro == 'unknown':
-        print("\n⚠️  Warning: Unknown Linux distribution detected.")
+        print("\n[WARN] Unknown Linux distribution detected.")
         print("   Proceeding with base requirements only.")
         print("   Some features may not work correctly.\n")
     
     req_files = ['requirements.txt']
 
-    print("\n📋 Installing Python dependencies from requirements.txt ...")
+    print("\n[*] Installing Python dependencies from requirements.txt ...")
     install_pip_requirements(req_files)
 
     if distro in ('fedora', 'rhel'):
-        print(f"\n📋 Detected Fedora/RHEL-based system...")
+        print("\n[*] Detected Fedora/RHEL-based system...")
         install_fedora_system_deps()
 
     elif distro == 'arch':
-        print(f"\n📋 Detected Arch Linux...")
+        print("\n[*] Detected Arch Linux...")
         install_arch_system_deps()
 
     else:
-        print(f"\n📋 No specific distro integration. Installed base Python requirements only.")
+        print("\n[*] No specific distro integration. Installed base Python requirements only.")
     
     print("\n" + "=" * 70)
-    print("✅ Installation complete!")
+    print("[OK] Installation complete!")
     print("=" * 70)
     
-    print("\n📝 Next steps:")
+    print("\n[*] Next steps:")
     print("   1. Install system packages using your package manager (see above)")
     print("   2. Run the application: python main.py")
-    print("\n💡 Note: Some pip packages may fail on Fedora/RHEL - this is normal.")
+    print("\n[NOTE] Some pip packages may fail on Fedora/RHEL - this is normal.")
     print("   These packages should be installed via dnf/yum instead.\n")
 
 if __name__ == '__main__':

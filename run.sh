@@ -68,7 +68,7 @@ print_banner() {
 
 
 
- ShieldEye SurfaceScan Launcher
+ ShieldEye ComplianceScan Launcher
 --------------------------------
 EOF
 }
@@ -98,44 +98,65 @@ check_gtk() {
     return 0
 }
 
+create_venv() {
+    # Why: --system-site-packages lets the venv see system PyGObject/gi. Without it,
+    # `import gi` fails at runtime even though the system GTK check passed.
+    print_info "Creating virtual environment (.venv with --system-site-packages)..."
+    python3 -m venv --system-site-packages "${SCRIPT_DIR}/.venv"
+}
+
+# Set to 1 by ensure_venv_can_import_gi when it wipes and recreates .venv, so
+# callers know the venv is empty and Python deps must be reinstalled.
+VENV_WAS_REBUILT=0
+
+ensure_venv_can_import_gi() {
+    # Activate then verify gi is reachable from the venv's interpreter.
+    # If a previous .venv was created without --system-site-packages, recreate it.
+    # shellcheck source=/dev/null
+    source "${SCRIPT_DIR}/.venv/bin/activate"
+    if ! python3 -c "import gi" 2>/dev/null; then
+        print_warning ".venv cannot import 'gi' - rebuilding with --system-site-packages..."
+        deactivate
+        rm -rf "${SCRIPT_DIR}/.venv"
+        create_venv
+        # shellcheck source=/dev/null
+        source "${SCRIPT_DIR}/.venv/bin/activate"
+        # Why: rm wiped every pip-installed package - callers must reinstall or
+        # the app launches against an empty venv and loses networkx/matplotlib/etc.
+        VENV_WAS_REBUILT=1
+    fi
+}
+
 install_dependencies() {
     print_info "Installing all dependencies..."
     echo ""
-    
+
     check_python || exit 1
-    
+
+    cd "${SCRIPT_DIR}"
+
+    if [ ! -d ".venv" ]; then
+        create_venv
+    fi
+    ensure_venv_can_import_gi
+
+    pip install --upgrade pip setuptools wheel
+
     if [ -f "${SCRIPT_DIR}/requirements.txt" ]; then
         print_info "Installing Python dependencies from requirements.txt..."
-        
-        # If we're inside a virtualenv, install into it (no --user)
-        if [ -n "${VIRTUAL_ENV-}" ]; then
-            print_info "Detected virtualenv at $VIRTUAL_ENV - installing into it (no --user)..."
-            python3 -m pip install -r "${SCRIPT_DIR}/requirements.txt"
-            print_success "Python dependencies installed into virtualenv"
-        else
-            # Outside of virtualenv, use --user to avoid touching system Python
-            if command -v pip3 &> /dev/null; then
-                pip3 install --user -r "${SCRIPT_DIR}/requirements.txt"
-                print_success "Python dependencies installed (user site-packages)"
-            elif command -v pip &> /dev/null; then
-                pip install --user -r "${SCRIPT_DIR}/requirements.txt"
-                print_success "Python dependencies installed (user site-packages)"
-            else
-                print_error "pip not found. Please install pip first."
-                exit 1
-            fi
-        fi
+        pip install -r "${SCRIPT_DIR}/requirements.txt"
+        print_success "Python dependencies installed into .venv"
     else
         print_warning "requirements.txt not found"
     fi
-    
+
     if [ -f "${SCRIPT_DIR}/install_deps.py" ]; then
         print_info "Running system dependency installer..."
         python3 "${SCRIPT_DIR}/install_deps.py"
     fi
-    
+
     check_gtk
-    
+
     echo ""
     print_success "All dependencies installed successfully!"
     echo ""
@@ -203,9 +224,27 @@ reset_data() {
 run_application() {
     print_info "Starting ShieldEye ComplianceScan..."
     echo ""
-    
+
     check_python || exit 1
-    
+
+    cd "${SCRIPT_DIR}"
+
+    # Ensure the app runs inside .venv (where requirements.txt is installed),
+    # not against system Python which lacks networkx/matplotlib/etc.
+    if [ ! -d ".venv" ]; then
+        print_warning "Virtualenv .venv not found. Installing dependencies first..."
+        install_dependencies
+    fi
+    ensure_venv_can_import_gi
+    if [ "${VENV_WAS_REBUILT}" = "1" ]; then
+        print_warning "venv was rebuilt empty - reinstalling dependencies first..."
+        install_dependencies
+    fi
+    if ! python3 -c "import networkx" 2>/dev/null; then
+        print_warning "Python dependencies missing in .venv - installing..."
+        install_dependencies
+    fi
+
     export PYTHONPATH="${SCRIPT_DIR}:${PYTHONPATH:-}"
 
     if [ -f "${SCRIPT_DIR}/main_gtk.py" ]; then
