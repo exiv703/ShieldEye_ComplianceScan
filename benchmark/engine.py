@@ -161,8 +161,7 @@ def _extract_standard(control_id: str) -> str | None:
 
 @lru_cache(maxsize=128)
 def get_control_mapping(control_id: str) -> ControlMapping | None:
-    # Why LRU cache? Reduces repeated parsing of common controls (CIS-4.1.3, GDPR-32.1.1) under load
-    # v2: added LRU cache after load test #157 showed 40% reduction in control lookup latency
+    # cached: a scan hits the same handful of controls over and over
     standard = _extract_standard(control_id)
     if standard is None:
         logger.warning("No mapping found for %s", control_id)

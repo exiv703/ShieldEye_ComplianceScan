@@ -1,7 +1,6 @@
 
-from gi.repository import Gtk, GLib
-from datetime import datetime
-from ..components import MetricCard, ScanItem, RiskBar, ComplianceChart, StandardsGrid
+from gi.repository import Gtk
+from ..components import MetricCard, StandardsGrid
 
 class DashboardView(Gtk.Box):
 

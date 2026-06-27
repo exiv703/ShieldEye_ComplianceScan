@@ -16,7 +16,6 @@ from backend.utils.logging_config import get_logger
 from backend.utils.observability import MetricsCollector, trace_span
 from benchmark.engine import ControlMapping
 from backend.utils.resilience import (
-    CircuitBreaker,
     RateLimitError,
     RateLimiter,
     get_circuit_breaker,
@@ -90,7 +89,7 @@ def _get_scan_metadata_values(keys: list[str]) -> dict[str, str]:
     if not keys:
         return {}
 
-    # Why batch queries? Reduces DB round-trips from O(N) to O(1) for idempotency checks
+    # one query for all keys instead of a round-trip per control
     config = get_config()
     db = ScanDatabase(config.database.db_path)
     placeholders = ", ".join("?" for _ in keys)

@@ -7,14 +7,14 @@ import re
 import networkx as nx
 import uuid
 from urllib.parse import urlparse, urljoin
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup
 from collections import deque
 from datetime import datetime
 from typing import List, Dict, Set, Tuple, Any, Optional
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from ..core.exceptions import ScannerConfigError, ScannerError, NetworkError
+from ..core.exceptions import ScannerError
 from ..security.validators import URLValidator, ScanConfigValidator
 from ..security.rate_limiter import DomainRateLimiter
 from ..utils.monitoring import get_metrics_collector

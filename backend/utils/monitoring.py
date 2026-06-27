@@ -4,7 +4,7 @@ import time
 import psutil
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from collections import deque
 
 from ..utils.logging_config import get_logger

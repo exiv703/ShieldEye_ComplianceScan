@@ -1,6 +1,6 @@
 # Observability Guide
 
-This guide describes production-ready observability and resilience controls introduced in Phase 3 for `v0.3.0-rc1`.
+This guide covers the observability and resilience controls: metrics, health checks, rate limiting and circuit breakers.
 
 ---
 

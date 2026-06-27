@@ -1,6 +1,6 @@
 import platform
 import os
-from typing import Literal, Optional
+from typing import Literal
 
 DistroType = Literal['fedora', 'rhel', 'arch', 'unknown']
 

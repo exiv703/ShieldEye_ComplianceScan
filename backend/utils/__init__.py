@@ -6,12 +6,12 @@ from .monitoring import get_metrics_collector, get_health_checker
 from .scan_templates import get_template_manager, ScanTemplate
 
 __all__ = [
-    "get_config",
     "AppConfig",
-    "setup_logging",
+    "ScanTemplate",
+    "get_config",
+    "get_health_checker",
     "get_logger",
     "get_metrics_collector",
-    "get_health_checker",
     "get_template_manager",
-    "ScanTemplate",
+    "setup_logging",
 ]

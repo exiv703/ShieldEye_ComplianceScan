@@ -30,8 +30,8 @@ class HeuristicBackend:
     def correlate_with_reason(
         self, finding_category: str, control_id: str
     ) -> tuple[float, str]:
-        # v1: prefix match -> v2: added category nuance after false positive #87
-        # Why expand rules? Reduces false positives from overly broad prefix matching.
+        # match on category, not just an id prefix - prefix matching was too
+        # greedy and pulled in unrelated controls
         if finding_category == "ssl":
             if control_id == "CIS-4.1.3":
                 return (
@@ -167,9 +167,8 @@ class CorrelationEngine:
         finding_category: str,
         control_id: str,
     ) -> dict[str, Any]:
-        # v2: fixed log mislabeling after audit flagged 'ML' label on heuristic results
-        # TODO: Phase 5: add confidence calibration dataset for ML backend tuning
-        # Why split logs? Audit trails must accurately reflect which backend made the decision.
+        # log the actual backend that decided (ml vs heuristic) so the reason
+        # we record later isn't mislabeled
         if self._backend_type == "ml" and self._ml is not None and self._ml._available:
             ml_confidence = self._ml.correlate(finding_description, control_description)
             if ml_confidence >= self._confidence_threshold:
@@ -193,7 +192,7 @@ class CorrelationEngine:
             heuristic_confidence, heuristic_reason = (
                 self._heuristic.correlate_with_reason(finding_category, control_id)
             )
-            # Why specific reasons? Compliance auditors need to trace why a finding mapped to a control.
+            # keep the reason explicit so the control mapping can be traced back
             if heuristic_confidence > 0:
                 reason = (
                     f"ML confidence {ml_confidence:.2f} < threshold {self._confidence_threshold:.2f}; "
@@ -253,5 +252,3 @@ def get_correlation_engine() -> CorrelationEngine:
     backend: Literal["heuristic", "ml"] = "ml" if enable_ml else "heuristic"
     return CorrelationEngine(backend=backend, confidence_threshold=threshold)
 
-
-# Impact: Improves audit-grade explainability by aligning backend logs, adding tuned heuristic rationale, and preserving resilient ML->heuristic fallback behavior.

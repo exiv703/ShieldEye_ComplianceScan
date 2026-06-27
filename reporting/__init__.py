@@ -13,7 +13,7 @@ from reporting.generator import (
 
 __all__ = [
     "ComplianceReport",
-    "generate_remediation_snippet",
     "export_json_report",
     "export_sarif_report",
+    "generate_remediation_snippet",
 ]

@@ -95,11 +95,10 @@ class Config(BaseSettings):
     allow_insecure_targets: bool = Field(default=False)
     enable_prometheus_export: bool = Field(default=False)
     enable_opentelemetry: bool = Field(default=False)
-    # Why optional? Interactive wizard adds UI complexity; JSON-only mode for API-first deployments
+    # off by default - these pull in extra surface (wizard UI, policy CRUD,
+    # websockets) that API-first deployments don't need
     enable_interactive_remediation: bool = Field(default=False)
-    # Why optional? API-first teams may manage policies via GitOps; UI workflow for collaborative teams
     enable_policy_management: bool = Field(default=False)
-    # Why optional? Real-time features add WebSocket complexity; batch reporting suffices for many teams
     enable_realtime_monitoring: bool = Field(default=False)
     alert_evaluation_window_seconds: int = Field(default=300, ge=30, le=3600)
     enable_grc_export: bool = Field(default=False)
@@ -285,5 +284,3 @@ def validate_config_at_startup(config: Config) -> None:
             "Set SHIELDEYE_DB_PATH or provide config.database.db_path before startup."
         )
 
-
-# Impact: Adds optional operational feature flags so teams can safely enable real-time monitoring and alert windows without changing baseline API behavior.

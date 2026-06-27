@@ -1,5 +1,5 @@
 
-from gi.repository import Gtk, GLib
+from gi.repository import Gtk
 
 class ProgressCard(Gtk.Box):
 

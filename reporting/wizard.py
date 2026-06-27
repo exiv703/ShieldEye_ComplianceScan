@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Literal
 from urllib.parse import urlparse
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from backend.utils.logging_config import get_logger
 from benchmark.engine import get_control_mapping
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 logger = get_logger("reporting.wizard")
 
 
-class RemediationStep(BaseModel):  # type: ignore[misc]  # Pydantic BaseModel metaclass typing is treated as Any under strict stubs
+class RemediationStep(BaseModel):  # type: ignore[misc]
     step_id: str
     control_id: str
     title: str
@@ -41,7 +41,6 @@ class RemediationWizard:
         steps: list[RemediationStep] = []
         seen_controls: set[str] = set()
 
-        # v2: added template rendering after audit flagged unresolved placeholders
         for result in self.report.results:
             if result.status not in ("failed", "error"):
                 continue
@@ -92,7 +91,7 @@ class RemediationWizard:
         self._steps_by_id = {step.step_id: step for step in steps}
         return steps
 
-    # Why validation_check? Ensures copy-paste fixes actually resolve the control gap
+    # confirm the applied fix actually closed the gap, not just that it ran
     def validate_step(self, step_id: str, actual_output: str) -> bool:
         step = self._get_step(step_id)
         step.status = "in_progress"
@@ -107,7 +106,7 @@ class RemediationWizard:
 
         step.status = "failed"
         logger.info("Remediation step %s executed: %s", step_id, step.status)
-        # Why specific hints? Operators need actionable next steps, not just 'FAIL'
+        # hand back an actionable hint, not just a bare FAIL
         logger.warning(
             "Validation failed for %s: expected '%s' but got '%s'. hint: %s",
             step.control_id,
@@ -117,7 +116,7 @@ class RemediationWizard:
         )
         return False
 
-    # Why rollback_command? Enables safe experimentation without permanent config drift
+    # let an operator undo a step so a bad fix doesn't stick
     def rollback_step(self, step_id: str) -> str:
         step = self._get_step(step_id)
         step.status = "rolled_back"
@@ -200,17 +199,16 @@ class RemediationWizard:
             key = missing_keys[0]
             if control_id == "GDPR-32.1.1" and key == "domain":
                 raise ValueError(
-                    "hint: missing {domain} for GDPR-32.1.1 — add target hostname to context"
+                    "hint: missing {domain} for GDPR-32.1.1 - add target hostname to context"
                 )
             if control_id == "CIS-4.1.3" and key == "package":
                 raise ValueError(
-                    "hint: missing {package} for CIS-4.1.3 — expected 'auditd' for RHEL/Ubuntu"
+                    "hint: missing {package} for CIS-4.1.3 - expected 'auditd' for RHEL/Ubuntu"
                 )
             raise ValueError(
-                f"hint: missing {{{key}}} for {control_id} — update remediation context before execution"
+                f"hint: missing {{{key}}} for {control_id} - update remediation context before execution"
             )
 
-        # Why fail closed? Prevents operators from executing incomplete commands
         return command
 
     def _validation_hint(self, control_id: str) -> str:
@@ -220,5 +218,3 @@ class RemediationWizard:
             return "renew certificate (for example: sudo certbot certonly --standalone -d <domain>) then re-check"
         return "check command output, target reachability, and remediation context"
 
-
-# Impact: Adds operator-safe, stepwise remediation with validation and rollback guidance to improve trust and reduce misconfiguration risk during compliance fix execution.

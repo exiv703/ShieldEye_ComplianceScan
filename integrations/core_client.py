@@ -97,7 +97,7 @@ class CoreClient:
             response = self.session.get(url, timeout=self.timeout)
         except requests.Timeout:
             logger.warning(
-                "Core API timeout for %s — check network or increase timeout", scan_id
+                "Core API timeout for %s - check network or increase timeout", scan_id
             )
             return None
         except requests.RequestException as exc:

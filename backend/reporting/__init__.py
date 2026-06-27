@@ -5,8 +5,8 @@ from .exporters import export_scan, ExportManager
 from .compliance_reports import ComplianceReportGenerator
 
 __all__ = [
+    "ComplianceReportGenerator",
+    "ExportManager",
     "Reporter",
     "export_scan",
-    "ExportManager",
-    "ComplianceReportGenerator",
 ]

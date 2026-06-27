@@ -5,10 +5,10 @@ import json
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 import logging
 
-from ..core.analysis import AnalysisResult, FindingDetail
+from ..core.analysis import AnalysisResult
 from ..core.exceptions import ReportGenerationError
 
 logger = logging.getLogger("shieldeye.exporters")

@@ -9,11 +9,10 @@ from reporting.grc_payload_formatters import (
 )
 
 __all__ = [
+    "DrataPayloadFormatter",
     "GRCExportResult",
     "ServiceNowPayloadFormatter",
-    "DrataPayloadFormatter",
     "VantaPayloadFormatter",
     "create_grc_payload_formatter",
 ]
 
-# Impact: Improves static analysis reliability and maintainability without altering runtime behavior.

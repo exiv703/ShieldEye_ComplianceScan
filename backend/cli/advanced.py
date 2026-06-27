@@ -14,8 +14,6 @@ from ..integrations.comparison import ScanComparator
 from ..utils.config import get_config, AppConfig
 from ..utils.logging_config import setup_logging, get_logger
 from ..utils.monitoring import get_health_checker
-from ..integrations.scheduler import get_scheduler, ScheduleFrequency
-from ..integrations.webhooks import get_webhook_manager, WebhookEvent
 
 logger = get_logger("cli")
 
@@ -76,7 +74,7 @@ Examples:
     
     subparsers.add_parser("health", help="Check system health")
     
-    stats_parser = subparsers.add_parser("stats", help="Show database statistics")
+    subparsers.add_parser("stats", help="Show database statistics")
     
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
     parser.add_argument("--config", help="Path to configuration file")
@@ -236,11 +234,11 @@ def cmd_health(args: argparse.Namespace, config: AppConfig) -> int:
     print("SYSTEM HEALTH CHECK")
     print("=" * 70)
     print(f"\nStatus: {health.status.upper()}")
-    print(f"Overall Health: {'✓ HEALTHY' if health.healthy else '✗ UNHEALTHY'}")
-    
+    print(f"Overall Health: {'HEALTHY' if health.healthy else 'UNHEALTHY'}")
+
     print("\nChecks:")
     for check_name, passed in health.checks.items():
-        status = "✓" if passed else "✗"
+        status = "[OK]" if passed else "[FAIL]"
         print(f"  {status} {check_name}")
     
     print("\nMetrics:")

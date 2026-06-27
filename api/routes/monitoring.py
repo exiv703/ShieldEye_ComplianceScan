@@ -19,7 +19,7 @@ logger = logging.getLogger("shieldeye.api.monitoring")
 monitoring_router = APIRouter(tags=["monitoring"])
 
 
-class AlertRule(BaseModel):  # type: ignore[misc]  # Pydantic BaseModel metaclass typing is treated as Any under strict stubs
+class AlertRule(BaseModel):  # type: ignore[misc]
     rule_id: str = Field(..., description="UUID identifier")
     name: str = Field(..., min_length=1)
     condition: Literal[
@@ -27,7 +27,7 @@ class AlertRule(BaseModel):  # type: ignore[misc]  # Pydantic BaseModel metaclas
     ]
     threshold: int = Field(..., ge=1)
     window_seconds: int = Field(..., ge=1)
-    # Why webhook-only for MVP? Email requires SMTP/provider config; deferred to Phase 5.
+    # webhook/slack only - email would need SMTP wiring we don't have yet
     notification_channels: list[Literal["webhook", "slack"]]
     enabled: bool = True
 
@@ -36,8 +36,8 @@ class AlertEvaluator:
     def __init__(self) -> None:
         self._events_by_rule: dict[str, list[datetime]] = {}
 
-    # Why in-memory? MVP focuses on correctness; persistent alert store is Phase 5
-    # Why sliding window? Prevents alert storms from transient spikes while catching sustained issues
+    # events live in memory only, no persistence. sliding window keeps a
+    # transient spike from firing while still catching sustained problems.
     def evaluate(
         self, event: dict[str, Any], rules: list[AlertRule]
     ) -> list[AlertRule]:
@@ -73,7 +73,6 @@ class AlertEvaluator:
 
 
 class NotificationDispatcher:
-    # Why separate dispatchers? Enables adding new channels without modifying core logic
     def __init__(self) -> None:
         self._breaker = get_circuit_breaker(service_name="monitoring_notifications")
 
@@ -125,7 +124,7 @@ class NotificationDispatcher:
 
 
 class RedisAlertStore:
-    # Why Redis? Enables horizontal scaling for alert evaluation in distributed deployments
+    # redis-backed variant so alert state is shared when running multiple workers
     def __init__(
         self,
         redis_client: redis.Redis | None,
@@ -234,7 +233,6 @@ _MONITORING_HUB = MonitoringHub()
 _ALERT_EVALUATOR = AlertEvaluator()
 _NOTIFICATION_DISPATCHER = NotificationDispatcher()
 
-# v2: switched from in-memory to Redis after load test #142 showed memory growth
 _ALERT_STORE: RedisAlertStore | None = None
 _IN_MEMORY_ALERT_RULES: dict[str, AlertRule] = {}
 _ALERT_STORE_FALLBACK_WARNED = False
@@ -255,14 +253,14 @@ async def _get_alert_store() -> RedisAlertStore:
         _ALERT_STORE_FALLBACK_WARNED = True
 
     _ALERT_STORE = RedisAlertStore(redis_client=redis_client)
-    # TODO: Phase 5.3: add background cleanup task via asyncio.create_task
+    # TODO: expire stale alert state with a periodic cleanup task
     return _ALERT_STORE
 
 
 async def list_alert_rules() -> list[AlertRule]:
     store = await _get_alert_store()
     if store.redis is None:
-        # MVP fallback: in-memory if Redis unavailable
+        # no redis configured - keep rules in memory
         return list(_IN_MEMORY_ALERT_RULES.values())
     return await store.list_rules()
 
@@ -270,7 +268,7 @@ async def list_alert_rules() -> list[AlertRule]:
 async def add_alert_rule(rule: AlertRule) -> AlertRule:
     store = await _get_alert_store()
     if store.redis is None:
-        # MVP fallback: in-memory if Redis unavailable
+        # no redis configured - keep rules in memory
         _IN_MEMORY_ALERT_RULES[rule.rule_id] = rule
         return rule
 
@@ -281,7 +279,7 @@ async def add_alert_rule(rule: AlertRule) -> AlertRule:
 async def remove_alert_rule(rule_id: str) -> AlertRule | None:
     store = await _get_alert_store()
     if store.redis is None:
-        # MVP fallback: in-memory if Redis unavailable
+        # no redis configured - keep rules in memory
         return _IN_MEMORY_ALERT_RULES.pop(rule_id, None)
 
     existing_rule = next(
@@ -313,7 +311,6 @@ def _build_alert_payload(rule: AlertRule, event: dict[str, Any]) -> dict[str, An
 async def _dispatch_triggered_alerts(
     triggered_rules: list[AlertRule], event: dict[str, Any]
 ) -> None:
-    # v2: added webhook dispatch after audit flagged "triggered but not sent" gap.
     config = get_config()
     webhook_url = getattr(config, "monitoring_webhook_url", "")
 
@@ -357,8 +354,8 @@ def _authenticate_ws_token(token: str | None) -> bool:
         return False
 
 
-# Why WebSocket? Enables real-time dashboards without polling overhead
-@monitoring_router.websocket("/ws/monitoring")  # type: ignore[misc]  # FastAPI WebSocket decorator typing limitation under mypy --strict
+# websocket feed so the dashboard gets pushes instead of polling
+@monitoring_router.websocket("/ws/monitoring")  # type: ignore[misc]
 async def monitoring_websocket(
     websocket: WebSocket,
     token: str = Query(default=""),
@@ -391,6 +388,3 @@ async def monitoring_websocket(
         )
     finally:
         await _MONITORING_HUB.disconnect(websocket)
-
-
-# Impact: Enables production-scale alert management with TTL cleanup and horizontal scaling.

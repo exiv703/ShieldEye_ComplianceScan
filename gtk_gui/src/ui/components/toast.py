@@ -1,5 +1,5 @@
 
-from gi.repository import Gtk, GLib, Adw
+from gi.repository import Gtk, Adw
 
 class Toast:
 

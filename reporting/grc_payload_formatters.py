@@ -18,8 +18,8 @@ if TYPE_CHECKING:
 
 logger = get_logger("reporting.grc_payload_formatters")
 
-# Maintainer note: Phase 4 scope is payload shaping + webhook dispatch only.
-# TODO: Phase 5 vendor API transport (authenticated ServiceNow/Drata/Vanta clients).
+# This module only shapes payloads and hands them to the webhook dispatcher.
+# TODO: authenticated ServiceNow/Drata/Vanta clients for direct API transport.
 
 
 class GRCExportResult(BaseModel):  # type: ignore[misc]
@@ -33,7 +33,7 @@ class GRCExportResult(BaseModel):  # type: ignore[misc]
 
 
 def _placeholder_external_ref(platform: str, batch_index: int) -> str:
-    # Why placeholder refs? Phase 4 does not call vendor APIs yet; these IDs are trace labels for webhook payload batches.
+    # not a real vendor id - just a trace label for the webhook batch
     return f"<{platform}_batch_{batch_index}>"
 
 
@@ -120,7 +120,7 @@ class _BasePayloadFormatter(WebhookSyncMixin):
         self.webhook_url = webhook_url
         self.batch_size = max(1, batch_size)
 
-    # Why batch upload? Keeps payloads bounded for platform API limits and retries.
+    # split into batches so a single payload stays under platform API limits
     def _batched(self, records: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
         return [
             records[index : index + self.batch_size]
@@ -187,7 +187,6 @@ class ServiceNowPayloadFormatter(_BasePayloadFormatter):
         self.instance_url = instance_url.rstrip("/")
         self.api_key = api_key
 
-    # Why platform-specific mappers? Each GRC system enforces distinct field names, nesting, and IDs.
     def _map_records(
         self,
         report: ComplianceReport,
@@ -278,7 +277,6 @@ class DrataPayloadFormatter(_BasePayloadFormatter):
         self.workspace_id = workspace_id
         self.api_key = api_key
 
-    # Why platform-specific mappers? Drata tracks controls/evidence differently than ServiceNow tables.
     def _map_records(
         self,
         report: ComplianceReport,
@@ -369,7 +367,6 @@ class VantaPayloadFormatter(_BasePayloadFormatter):
         self.tenant_id = tenant_id
         self.api_key = api_key
 
-    # Why platform-specific mappers? Vanta expects evidence-oriented control snapshots.
     def _map_records(
         self,
         report: ComplianceReport,
@@ -484,6 +481,3 @@ def create_grc_payload_formatter(
         )
 
     raise ValueError(f"Unsupported GRC platform: {platform}")
-
-
-# Impact: Clarifies Phase 4 as payload-formatting-only integration with retained async webhook retry/backoff.

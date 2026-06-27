@@ -44,23 +44,12 @@ class Text:
     def get_about_content():
         return f"""
             <h2 style='color: {Colors.SECONDARY_ACCENT};'>ShieldEye ComplianceScan</h2>
-            <p style='color: {Colors.TEXT_MAIN};'>Version 1.0.1</p>
+            <p style='color: {Colors.TEXT_MAIN};'>Version 1.0.0</p>
             <p style='color: {Colors.TEXT_MAIN};'>See the threats before they see you.</p>
             <br>
             <p style='color: {Colors.TEXT_MAIN};'>
-            ShieldEye is a conceptual application designed for modern security auditing,
-            providing tools for vulnerability scanning and compliance checking.
+            ShieldEye scans web targets for compliance gaps (GDPR, PCI-DSS,
+            ISO 27001) and common vulnerabilities.
             </p>
             <p style='color: {Colors.TEXT_MUTED};'>© 2024 ShieldEye. All rights reserved.</p>
-
-            <h3 style='color: {Colors.PRIMARY_ACCENT};'>Scan Summary</h3>
-            <p style='color: {Colors.TEXT_MAIN};'><b>Target URL:</b> {url}</p>
-            <p style='color: {Colors.TEXT_MAIN};'><b>Scan Mode:</b> {mode}</p>
-            <p style='color: {Colors.TEXT_MAIN};'><b>Standards Audited:</b> {audited_str}</p>
-            <br>
-            <p style='color: {Colors.TEXT_MAIN};'>Scan completed in {scan_duration_secs:.2f} seconds.</p>
-            <p style='color: {Colors.DANGER};'><b>Critical issues found: {summary_counts.get('critical', 0)}</b></p>
-            <p style='color: {Colors.DANGER};'><b>High issues found: {summary_counts.get('high', 0)}</b></p>
-            <p style='color: {Colors.WARNING};'><b>Medium issues found: {summary_counts.get('medium', 0)}</b></p>
-            <p style='color: {Colors.TEXT_MUTED};'><b>Low issues found: {summary_counts.get('low', 0)}</b></p>
-        """ 
+        """

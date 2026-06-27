@@ -20,7 +20,7 @@ router = APIRouter(tags=["policies"])
 security = HTTPBearer()
 
 
-class PolicySummary(BaseModel):  # type: ignore[misc]  # Pydantic BaseModel metaclass typing is treated as Any under strict stubs
+class PolicySummary(BaseModel):  # type: ignore[misc]
     policy_id: str = Field(..., description="UUID or slug identifier")
     name: str = Field(..., description="Human-readable policy name")
     standard: Literal["CIS", "PCI-DSS", "SOC2", "GDPR"]
@@ -30,7 +30,7 @@ class PolicySummary(BaseModel):  # type: ignore[misc]  # Pydantic BaseModel meta
     status: Literal["draft", "pending_approval", "approved", "archived"]
 
 
-class PolicyDocumentCreate(BaseModel):  # type: ignore[misc]  # Pydantic BaseModel metaclass typing is treated as Any under strict stubs
+class PolicyDocumentCreate(BaseModel):  # type: ignore[misc]
     policy_id: str = Field(..., description="UUID or slug identifier")
     name: str = Field(..., min_length=1)
     standard: Literal["CIS", "PCI-DSS", "SOC2", "GDPR"]
@@ -40,7 +40,7 @@ class PolicyDocumentCreate(BaseModel):  # type: ignore[misc]  # Pydantic BaseMod
     rego_content: str | None = None
 
 
-class PolicyDocumentUpdate(BaseModel):  # type: ignore[misc]  # Pydantic BaseModel metaclass typing is treated as Any under strict stubs
+class PolicyDocumentUpdate(BaseModel):  # type: ignore[misc]
     name: str | None = None
     standard: Literal["CIS", "PCI-DSS", "SOC2", "GDPR"] | None = None
     status: Literal["draft", "pending_approval", "approved", "archived"] | None = None
@@ -48,29 +48,29 @@ class PolicyDocumentUpdate(BaseModel):  # type: ignore[misc]  # Pydantic BaseMod
     rego_content: str | None = None
 
 
-class PolicyVersionEntry(BaseModel):  # type: ignore[misc]  # Pydantic BaseModel metaclass typing is treated as Any under strict stubs
+class PolicyVersionEntry(BaseModel):  # type: ignore[misc]
     version: str
     updated_at: datetime
     updated_by: str
     status: Literal["draft", "pending_approval", "approved", "archived"]
 
 
-class PolicyDetail(BaseModel):  # type: ignore[misc]  # Pydantic BaseModel metaclass typing is treated as Any under strict stubs
+class PolicyDetail(BaseModel):  # type: ignore[misc]
     summary: PolicySummary
     document: PolicyDocument
     rego_content: str | None = None
     version_history: List[PolicyVersionEntry]
 
 
-class ApprovePolicyRequest(BaseModel):  # type: ignore[misc]  # Pydantic BaseModel metaclass typing is treated as Any under strict stubs
+class ApprovePolicyRequest(BaseModel):  # type: ignore[misc]
     approver: str | None = None
 
 
 _POLICY_STORE: Dict[str, Dict[str, Any]] = {}
 
 
-# Why version history? Enables audit trail for policy changes required by compliance frameworks
-# Why approval workflow? Prevents unreviewed policies from affecting production scans
+# version history doubles as the audit trail for policy changes; the approval
+# step keeps unreviewed policies out of live scans
 
 
 def _utcnow() -> datetime:
@@ -136,7 +136,6 @@ def _policy_validation_hint(
 def _validate_payload(
     policy_id: str, payload: Dict[str, Any], rego_content: str | None
 ) -> PolicyDocument:
-    # v2: expanded validation hints after audit feedback on generic API errors.
     try:
         policy_document = PolicyDocument(**payload)
         if rego_content and not validate_rego_stub(rego_content):
@@ -152,7 +151,7 @@ def _validate_payload(
         raise HTTPException(status_code=422, detail=f"{exc}. {hint}") from exc
 
 
-@router.get("/policies", response_model=List[PolicySummary])  # type: ignore[misc]  # FastAPI router decorator typing limitation under mypy --strict
+@router.get("/policies", response_model=List[PolicySummary])  # type: ignore[misc]
 async def list_policies(
     user: Annotated[Any, Depends(_require_permission("scan:read"))],
     standard: Literal["CIS", "PCI-DSS", "SOC2", "GDPR"] | None = Query(default=None),
@@ -172,7 +171,7 @@ async def list_policies(
     return summaries
 
 
-@router.get("/policies/{policy_id}", response_model=PolicyDetail)  # type: ignore[misc]  # FastAPI router decorator typing limitation under mypy --strict
+@router.get("/policies/{policy_id}", response_model=PolicyDetail)  # type: ignore[misc]
 async def get_policy(
     policy_id: str,
     user: Annotated[Any, Depends(_require_permission("scan:read"))],
@@ -193,7 +192,7 @@ async def get_policy(
     )
 
 
-@router.post("/policies", response_model=PolicyDetail, status_code=201)  # type: ignore[misc]  # FastAPI router decorator typing limitation under mypy --strict
+@router.post("/policies", response_model=PolicyDetail, status_code=201)  # type: ignore[misc]
 async def create_policy(
     request: PolicyDocumentCreate,
     user: Annotated[Any, Depends(_require_permission("scan:write"))],
@@ -241,7 +240,7 @@ async def create_policy(
     )
 
 
-@router.put("/policies/{policy_id}", response_model=PolicyDetail)  # type: ignore[misc]  # FastAPI router decorator typing limitation under mypy --strict
+@router.put("/policies/{policy_id}", response_model=PolicyDetail)  # type: ignore[misc]
 async def update_policy(
     policy_id: str,
     request: PolicyDocumentUpdate,
@@ -304,7 +303,7 @@ async def update_policy(
     )
 
 
-@router.post("/policies/{policy_id}/approve", response_model=PolicySummary)  # type: ignore[misc]  # FastAPI router decorator typing limitation under mypy --strict
+@router.post("/policies/{policy_id}/approve", response_model=PolicySummary)  # type: ignore[misc]
 async def approve_policy(
     policy_id: str,
     request: ApprovePolicyRequest,
@@ -341,7 +340,7 @@ async def approve_policy(
     return cast(PolicySummary, approved_summary)
 
 
-@router.delete("/policies/{policy_id}", response_model=PolicySummary)  # type: ignore[misc]  # FastAPI router decorator typing limitation under mypy --strict
+@router.delete("/policies/{policy_id}", response_model=PolicySummary)  # type: ignore[misc]
 async def archive_policy(
     policy_id: str,
     user: Annotated[Any, Depends(_require_permission("scan:delete"))],
@@ -371,5 +370,3 @@ async def archive_policy(
 
     return cast(PolicySummary, archived)
 
-
-# Impact: Adds API-first policy lifecycle management with validation, audit-friendly version history, and approval controls that improve safe team adoption.

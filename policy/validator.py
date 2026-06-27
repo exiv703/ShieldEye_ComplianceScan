@@ -57,7 +57,7 @@ def _run_cache_awaitable(awaitable: Coroutine[Any, Any, _T]) -> _T | None:
 def _get_cached_policy(cache_key: str) -> PolicyDocument | None:
     redis_client = _run_cache_awaitable(get_redis_client())
     if redis_client is None:
-        # MVP fallback: direct parse if cache unavailable
+        # no cache available, caller will parse from disk
         return None
 
     try:
@@ -102,7 +102,6 @@ def load_policy_yaml(path: str) -> PolicyDocument:
 
     cache_key = ""
     if _is_policy_cache_enabled():
-        # Why optional? Policy cache adds Redis dependency; filesystem parse is safe fallback
         cache_key = f"{_POLICY_CACHE_PREFIX}{hashlib.sha256(content.encode('utf-8')).hexdigest()}"
         cached_policy = _get_cached_policy(cache_key)
         if cached_policy is not None:

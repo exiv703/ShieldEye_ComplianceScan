@@ -2,9 +2,9 @@
 
 # 🛡️ ShieldEye ComplianceScan
 
-**Enterprise-Grade Compliance & Vulnerability Scanner**
+**Compliance and vulnerability scanner for GDPR, PCI-DSS and ISO 27001**
 
-*Real-time security scanning • Compliance validation • Professional reporting*
+GTK desktop UI and a REST API, with JSON/SARIF reporting.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/Python-3.10--3.13-blue?logo=python&logoColor=white)](https://www.python.org/)
@@ -341,11 +341,11 @@ sudo systemctl enable --now auditd
 
 ## v1.0.0 Release Highlights
 
-- **Production-ready compliance scanning stack:** Stable scanner, policy engine, integrations, and reporting pipeline across `backend/`, `policy/`, and `reporting/`.
-- **Policy-as-code + benchmark orchestration:** YAML/Rego validation, control mapping, and idempotent async execution via `policy/validator.py`, `benchmark/engine.py`, and `benchmark/orchestrator.py`.
-- **Enterprise integrations + correlation:** Typed ShieldEye-Core/SurfaceScan clients with deterministic correlation fallback in `integrations/`.
-- **Operational hardening:** Redis-backed resilience controls, observability hooks, and monitoring endpoints via `backend/utils/resilience.py`, `backend/utils/observability.py`, and `api/routes/monitoring.py`.
-- **Release-grade type hygiene and config safety:** Structured environment handling and strict runtime validation in `backend/utils/config.py`.
+- Scanner, policy engine, integrations and reporting pipeline across `backend/`, `policy/` and `reporting/`.
+- Policy-as-code: YAML/Rego validation, control mapping and idempotent async execution (`policy/validator.py`, `benchmark/engine.py`, `benchmark/orchestrator.py`).
+- Typed ShieldEye-Core/SurfaceScan clients with a deterministic correlation fallback in `integrations/`.
+- Optional Redis-backed resilience, observability hooks and monitoring endpoints (`backend/utils/resilience.py`, `backend/utils/observability.py`, `api/routes/monitoring.py`).
+- Structured environment handling and runtime config validation in `backend/utils/config.py`.
 
 ## Migration Guide: v0.4.0-rc1 → v1.0.0
 
@@ -410,16 +410,16 @@ python -m backend.cli.advanced history --limit 5
 | `GET`  | `/scans/{id}` | Retrieve scan details and findings | `scan:read` |
 | `DELETE` | `/scans/{id}` | Remove a scan and its findings | `scan:delete` |
 | `GET`  | `/scans/{id}/export?format=sarif` | Export scan results (json, csv, xml, sarif, markdown) | `scan:read` |
-| `GET`  | `/health` | Service health and dependency checks | — |
-| `GET`  | `/templates` | List available scan templates | — |
-| `GET`  | `/templates/{name}` | Get template configuration | — |
+| `GET`  | `/health` | Service health and dependency checks | - |
+| `GET`  | `/templates` | List available scan templates | - |
+| `GET`  | `/templates/{name}` | Get template configuration | - |
 | `POST` | `/schedules` | Create a recurring scan schedule | `scan:write` |
 | `GET`  | `/schedules` | List active scan schedules | `scan:read` |
 | `DELETE` | `/schedules/{id}` | Cancel a scheduled scan | `scan:write` |
 | `POST` | `/webhooks/subscribe` | Subscribe to scan-completion events | `config:write` |
 | `GET`  | `/webhooks` | List webhook subscriptions | `config:write` |
 | `POST` | `/users` | Create a new user account | `user:manage` |
-| `POST` | `/api-keys` | Generate a scoped API key | — |
+| `POST` | `/api-keys` | Generate a scoped API key | - |
 | `GET`  | `/stats` | Aggregated scan statistics | `scan:read` |
 
 ## Integration Diagram

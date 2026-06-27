@@ -1,4 +1,4 @@
-# ShieldEye ComplianceScan — Integration Guide
+# ShieldEye ComplianceScan - Integration Guide
 
 This guide explains how to connect ShieldEye ComplianceScan with the ShieldEye ecosystem (Core and SurfaceScan) to import external scan findings and correlate them to compliance controls.
 
@@ -24,10 +24,10 @@ This guide explains how to connect ShieldEye ComplianceScan with the ShieldEye e
 ```
 
 **Flow explanation:**
-1. **Target** — The URL, IP, or asset being evaluated.
-2. **ComplianceScan** — The main orchestrator (`benchmark/engine.py`) loads policies, executes controls, and collects raw findings.
-3. **Core / SurfaceScan** — Optional external data sources. `CoreClient` imports deep scan results from a ShieldEye-Core instance. `SurfaceScanClient` imports surface-level findings (SSL, headers, cookies, privacy, tracking) from ShieldEye-SurfaceScan.
-4. **Report** — Findings are merged, correlated to controls, and exported as JSON or SARIF via `reporting/generator.py`.
+1. **Target** - The URL, IP, or asset being evaluated.
+2. **ComplianceScan** - The main orchestrator (`benchmark/engine.py`) loads policies, executes controls, and collects raw findings.
+3. **Core / SurfaceScan** - Optional external data sources. `CoreClient` imports deep scan results from a ShieldEye-Core instance. `SurfaceScanClient` imports surface-level findings (SSL, headers, cookies, privacy, tracking) from ShieldEye-SurfaceScan.
+4. **Report** - Findings are merged, correlated to controls, and exported as JSON or SARIF via `reporting/generator.py`.
 
 ### GRC Payload Formatting (Phase 4 MVP)
 
@@ -57,7 +57,7 @@ client = CoreClient(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `base_url` | `str` | — | Root URL of the Core API. Automatically normalized to `https://` if no scheme is provided. |
+| `base_url` | `str` | - | Root URL of the Core API. Automatically normalized to `https://` if no scheme is provided. |
 | `api_key` | `str \| None` | `None` | Bearer token sent in the `Authorization` header. |
 | `timeout` | `int` | `30` | HTTP request timeout (seconds). |
 | `allow_internal` | `bool` | `False` | When `False`, blocks `localhost`, `127.0.0.1`, and private IP ranges to prevent SSRF. |

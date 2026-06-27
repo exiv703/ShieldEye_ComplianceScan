@@ -4,7 +4,7 @@ import json
 import os
 import re
 import tempfile
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -40,7 +40,7 @@ def _scrub_output(text: str) -> str:
     return text
 
 
-_SHIELD_EYE_VERSION = "0.1.0"
+_SHIELD_EYE_VERSION = "1.0.0"
 _GENERATOR_VERSION = "1.0.0"
 
 
@@ -124,7 +124,7 @@ def export_json_report(report: ComplianceReport, output_path: str) -> None:
 
     if enable_grc_export:
         grc_platform = config.grc_platform
-        # Why formatter wording? Phase 4 shapes payloads + webhook sync; direct vendor transport lands in Phase 5.
+        # we only shape the payload here; sending it to the vendor is the webhook's job
         try:
             from reporting.grc_payload_formatters import create_grc_payload_formatter
 
@@ -244,5 +244,3 @@ def export_sarif_report(report: ComplianceReport, output_path: str) -> None:
         logger.warning("Failed to export report to %s", output_path)
         raise
 
-
-# Impact: Adds optional, non-breaking GRC platform export integration gated by ENABLE_GRC_EXPORT-compatible config.

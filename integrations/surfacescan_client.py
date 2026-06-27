@@ -15,7 +15,7 @@ from pydantic import BaseModel
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from integrations.correlation import CorrelationEngine, get_correlation_engine
+from integrations.correlation import get_correlation_engine
 
 logger = logging.getLogger("shieldeye.integrations.surfacescan")
 
@@ -111,7 +111,7 @@ class SurfaceScanClient:
             response = self.session.get(url, timeout=self.timeout)
         except requests.Timeout:
             logger.warning(
-                "SurfaceScan API timeout for %s — check network or increase timeout",
+                "SurfaceScan API timeout for %s - check network or increase timeout",
                 target_url,
             )
             return []
@@ -120,7 +120,7 @@ class SurfaceScanClient:
             return []
 
         if response.status_code == 404:
-            logger.info("SurfaceScan 404 for %s — probably no findings", target_url)
+            logger.info("SurfaceScan 404 for %s - probably no findings", target_url)
             return []
 
         response.raise_for_status()
