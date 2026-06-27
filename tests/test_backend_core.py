@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 from typing import Any, Dict
 
 from backend import AnalysisResult, analyze_results, analyze_scan_results
@@ -47,7 +46,7 @@ def test_analyze_results_empty() -> None:
     }, "Unexpected summary counts for empty input"
     assert 0 <= analysis.score <= 100, "Score should be within 0..100"
 
-    print("✅ PASS: analyze_results handles empty input correctly")
+    print("PASS: analyze_results handles empty input correctly")
 
 
 def test_analyze_results_sample_data() -> None:
@@ -73,7 +72,7 @@ def test_analyze_results_sample_data() -> None:
         analysis.score == 88
     ), f"Unexpected score {analysis.score!r}, expected 88 for sample data"
 
-    print("✅ PASS: analyze_results aggregates, sorts and scores sample data correctly")
+    print("PASS: analyze_results aggregates, sorts and scores sample data correctly")
 
 
 def test_analyze_scan_results_wrapper() -> None:
@@ -95,7 +94,7 @@ def test_analyze_scan_results_wrapper() -> None:
         f.message for f in direct.findings
     ], "Wrapper should preserve findings ordering and messages"
 
-    print("✅ PASS: analyze_scan_results behaves identically to analyze_results")
+    print("PASS: analyze_scan_results behaves identically to analyze_results")
 
 
 def main() -> int:
@@ -111,17 +110,17 @@ def main() -> int:
             func()
         except AssertionError as e:
             all_ok = False
-            print(f"❌ {name} FAILED: {e}")
+            print(f"{name} FAILED: {e}")
         except Exception as e:
             all_ok = False
-            print(f"❌ {name} ERROR: {e}")
+            print(f"{name} ERROR: {e}")
 
     print("\n" + "=" * 70)
     if all_ok:
-        print("✅ ALL BACKEND TESTS PASSED")
+        print("ALL BACKEND TESTS PASSED")
         return 0
     else:
-        print("❌ SOME BACKEND TESTS FAILED")
+        print("SOME BACKEND TESTS FAILED")
         return 1
 
 

@@ -27,7 +27,7 @@ def test_get_control_mapping_gdpr() -> None:
 def test_get_control_mapping_unknown(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level(logging.WARNING):
         assert get_control_mapping("UNKNOWN-1.1.1") is None
-    assert "No mapping found" in caplog.text
+    assert "No registry for standard UNKNOWN" in caplog.text
 
 
 def test_render_remediation_substitutes() -> None:
@@ -156,7 +156,6 @@ def test_execute_benchmark_passed() -> None:
             "benchmark.orchestrator._run_check_with_timeout", new_callable=AsyncMock
         ) as mock_run,
         patch("benchmark.orchestrator._store_benchmark_result"),
-        patch("benchmark.orchestrator.get_metrics_collector"),
         patch("benchmark.orchestrator.get_config") as cfg,
         patch("benchmark.orchestrator.ScanDatabase"),
     ):
@@ -178,7 +177,6 @@ def test_execute_benchmark_timeout() -> None:
             "benchmark.orchestrator._run_check_with_timeout", new_callable=AsyncMock
         ) as mock_run,
         patch("benchmark.orchestrator._store_benchmark_result"),
-        patch("benchmark.orchestrator.get_metrics_collector"),
         patch("benchmark.orchestrator.get_config") as cfg,
         patch("benchmark.orchestrator.ScanDatabase"),
     ):

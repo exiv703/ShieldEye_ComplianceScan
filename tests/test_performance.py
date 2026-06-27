@@ -22,7 +22,8 @@ class TestScannerPerformance:
             enable_metrics=False
         )
         duration = time.time() - start
-        
+
+        assert scanner is not None
         assert duration < 0.1, f"Scanner initialization took {duration:.3f}s (should be < 0.1s)"
     
     def test_rate_limiter_overhead(self):

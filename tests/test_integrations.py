@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
 import pytest
-from integrations.core_client import CoreClient, CoreScanResult
+from integrations.core_client import CoreClient
 from integrations.surfacescan_client import SurfaceFinding, SurfaceScanClient
 
 

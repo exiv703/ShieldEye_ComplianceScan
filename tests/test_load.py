@@ -146,11 +146,11 @@ def run_all_load_tests(base_url: str = "http://localhost:8000") -> Dict[str, Any
     tester = LoadTester(base_url)
     results = {}
     
-    print("🚀 Starting Load Tests...")
+    print("Starting Load Tests...")
     print(f"Target: {base_url}")
     print("-" * 80)
     
-    print("\n📊 Test 1: Health Check (High Load)")
+    print("\nTest 1: Health Check (High Load)")
     result = tester.run_load_test(
         test_name="health_check_high_load",
         test_func=tester.test_health_check,
@@ -161,7 +161,7 @@ def run_all_load_tests(base_url: str = "http://localhost:8000") -> Dict[str, Any
     results["health_check_high_load"] = asdict(result)
     print_result_summary(result)
     
-    print("\n📊 Test 2: List Scans (Moderate Load)")
+    print("\nTest 2: List Scans (Moderate Load)")
     result = tester.run_load_test(
         test_name="list_scans_moderate",
         test_func=tester.test_list_scans,
@@ -172,7 +172,7 @@ def run_all_load_tests(base_url: str = "http://localhost:8000") -> Dict[str, Any
     results["list_scans_moderate"] = asdict(result)
     print_result_summary(result)
     
-    print("\n📊 Test 3: Get Templates (Light Load)")
+    print("\nTest 3: Get Templates (Light Load)")
     result = tester.run_load_test(
         test_name="get_templates_light",
         test_func=tester.test_get_templates,
@@ -183,7 +183,7 @@ def run_all_load_tests(base_url: str = "http://localhost:8000") -> Dict[str, Any
     results["get_templates_light"] = asdict(result)
     print_result_summary(result)
     
-    print("\n📊 Test 4: Stats Endpoint (Sustained Load)")
+    print("\nTest 4: Stats Endpoint (Sustained Load)")
     result = tester.run_load_test(
         test_name="stats_sustained",
         test_func=tester.test_stats_endpoint,
@@ -194,7 +194,7 @@ def run_all_load_tests(base_url: str = "http://localhost:8000") -> Dict[str, Any
     results["stats_sustained"] = asdict(result)
     print_result_summary(result)
     
-    print("\n📊 Test 5: Spike Test (Sudden High Load)")
+    print("\nTest 5: Spike Test (Sudden High Load)")
     result = tester.run_load_test(
         test_name="spike_test",
         test_func=tester.test_health_check,
@@ -206,7 +206,7 @@ def run_all_load_tests(base_url: str = "http://localhost:8000") -> Dict[str, Any
     print_result_summary(result)
     
     print("\n" + "=" * 80)
-    print("📈 OVERALL LOAD TEST SUMMARY")
+    print("OVERALL LOAD TEST SUMMARY")
     print("=" * 80)
     
     total_requests = sum(r["total_requests"] for r in results.values())
@@ -221,13 +221,13 @@ def run_all_load_tests(base_url: str = "http://localhost:8000") -> Dict[str, Any
     
     success_rate = total_successful / total_requests * 100
     if success_rate >= 99.5:
-        status = "✅ EXCELLENT"
+        status = "EXCELLENT"
     elif success_rate >= 95:
-        status = "✓ GOOD"
+        status = "GOOD"
     elif success_rate >= 90:
-        status = "⚠ ACCEPTABLE"
+        status = "ACCEPTABLE"
     else:
-        status = "❌ NEEDS IMPROVEMENT"
+        status = "NEEDS IMPROVEMENT"
     
     print(f"\nPerformance Status: {status}")
     print("=" * 80)
@@ -235,7 +235,7 @@ def run_all_load_tests(base_url: str = "http://localhost:8000") -> Dict[str, Any
     output_file = "load_test_results.json"
     with open(output_file, "w") as f:
         json.dump(results, f, indent=2)
-    print(f"\n💾 Results saved to: {output_file}")
+    print(f"\nResults saved to: {output_file}")
     
     return results
 
@@ -264,8 +264,8 @@ if __name__ == "__main__":
     try:
         run_all_load_tests(base_url)
     except KeyboardInterrupt:
-        print("\n\n⚠️  Load test interrupted by user")
+        print("\n\n️  Load test interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"\n\n❌ Load test failed: {e}")
+        print(f"\n\nLoad test failed: {e}")
         sys.exit(1)

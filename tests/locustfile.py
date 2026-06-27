@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from locust import HttpUser, task, between, events
 import random
-import json
 
 class ShieldEyeUser(HttpUser):
 
@@ -108,16 +107,16 @@ class StressTestUser(HttpUser):
 @events.test_start.add_listener
 def on_test_start(environment, **kwargs):
 
-    print("🚀 Load test starting...")
+    print("Load test starting...")
 
 @events.test_stop.add_listener
 def on_test_stop(environment, **kwargs):
 
-    print("🏁 Load test completed!")
+    print("Load test completed!")
     
     stats = environment.stats
     print("\n" + "=" * 80)
-    print("📊 LOAD TEST SUMMARY")
+    print("LOAD TEST SUMMARY")
     print("=" * 80)
     print(f"Total Requests:     {stats.total.num_requests}")
     print(f"Failed Requests:    {stats.total.num_failures}")

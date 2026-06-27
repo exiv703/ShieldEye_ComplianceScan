@@ -12,9 +12,9 @@ def test_python_version():
     print(f"Current Python version: {version.major}.{version.minor}.{version.micro}")
     
     if version >= (3, 10):
-        print("✅ PASS: Python 3.10+ detected")
+        print("PASS: Python 3.10+ detected")
     else:
-        print("❌ FAIL: Python version too old (3.10+ required)")
+        print("FAIL: Python version too old (3.10+ required)")
     
     assert version >= (3, 10), "Python 3.10+ required"
 
@@ -34,7 +34,7 @@ def test_distro_detection():
     print(f"Is Arch-based: {is_arch_based()}")
     
     assert distro in ('fedora', 'rhel', 'arch', 'unknown'), f"Invalid distro code: {distro}"
-    print("✅ PASS: Distribution detection working")
+    print("PASS: Distribution detection working")
 
 def test_requirements_files():
 
@@ -49,9 +49,9 @@ def test_requirements_files():
     for filename in required_files:
         assert os.path.exists(filename), f"{filename} is missing"
         size = os.path.getsize(filename)
-        print(f"✅ {filename} exists ({size} bytes)")
+        print(f"{filename} exists ({size} bytes)")
     
-    print("✅ PASS: requirements.txt present")
+    print("PASS: requirements.txt present")
 
 def test_main_imports():
 
@@ -60,17 +60,16 @@ def test_main_imports():
     print("=" * 70)
     
     try:
-        import main
-        print("✅ PASS: main.py imported successfully")
-        print(f"   (Python version check passed)")
+        print("PASS: main.py imported successfully")
+        print("   (Python version check passed)")
     except SystemExit as e:
         if sys.version_info < (3, 10):
-            print("✅ PASS: main.py correctly rejected Python < 3.10")
+            print("PASS: main.py correctly rejected Python < 3.10")
         else:
             raise AssertionError(f"Unexpected SystemExit: {e}")
     except Exception as e:
-        print(f"⚠️  WARNING: Import failed with: {e}")
-        print(f"   (This may be due to missing GUI dependencies)")
+        print(f"️  WARNING: Import failed with: {e}")
+        print("   (This may be due to missing GUI dependencies)")
 
 def test_installer_exists():
 
@@ -79,13 +78,13 @@ def test_installer_exists():
     print("=" * 70)
     
     assert os.path.exists('install_deps.py'), "install_deps.py not found"
-    print("✅ install_deps.py exists")
+    print("install_deps.py exists")
     
     with open('install_deps.py', 'r') as f:
         content = f.read()
         assert 'detect_distro' in content, "Installer missing detect_distro function"
         assert 'install_pip_requirements' in content, "Installer missing install_pip_requirements function"
-        print("✅ PASS: Installer contains expected functions")
+        print("PASS: Installer contains expected functions")
 
 def test_documentation():
 
@@ -99,9 +98,9 @@ def test_documentation():
     
     for filename, description in docs.items():
         assert os.path.exists(filename), f"{filename} MISSING ({description})"
-        print(f"✅ {filename} exists ({description})")
+        print(f"{filename} exists ({description})")
     
-    print("✅ PASS: All documentation files present")
+    print("PASS: All documentation files present")
 
 def main():
 
@@ -126,7 +125,7 @@ def main():
             result = test_func()
             results.append(result)
         except Exception as e:
-            print(f"\n❌ EXCEPTION in {test_func.__name__}: {e}")
+            print(f"\nEXCEPTION in {test_func.__name__}: {e}")
             results.append(False)
     
     print("\n" + "=" * 70)
@@ -139,11 +138,11 @@ def main():
     print(f"Tests passed: {passed}/{total}")
     
     if passed == total:
-        print("\n🎉 ALL TESTS PASSED! 🎉")
+        print("\nALL TESTS PASSED!")
         print("ShieldEye ComplianceScan is properly configured for multi-distro support.")
         return 0
     else:
-        print(f"\n⚠️  {total - passed} test(s) failed.")
+        print(f"\n️  {total - passed} test(s) failed.")
         print("Please review the output above for details.")
         return 1
 
