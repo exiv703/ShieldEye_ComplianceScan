@@ -108,25 +108,25 @@ audit or a manual pentest. HIPAA mapping exists but is partial.
 
 A modular Python backend shared by three frontends (GTK, CLI, REST):
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────┐
-│           GTK4 GUI  •  CLI  •  FastAPI REST API               │
+│           GTK4 GUI  •  CLI  •  FastAPI REST API              │
 └─────────────────────────────┬────────────────────────────────┘
                               ▼
 ┌──────────────────────────────────────────────────────────────┐
-│                      Backend Core                             │
-│              Scanner • Analyzer • Reporter                    │
+│                      Backend Core                            │
+│              Scanner • Analyzer • Reporter                   │
 └───────┬─────────────────────┬─────────────────────┬──────────┘
         ▼                     ▼                     ▼
-┌───────────────┐    ┌───────────────┐    ┌───────────────┐
-│   Scanner     │    │   Analyzer    │    │   Reporter    │
-│  (requests)   │    │ (Compliance)  │    │ (PDF/SARIF…)  │
-└───────────────┘    └───────────────┘    └───────────────┘
-        └──────────┬──────────┴─────────────────────┘
-                   ▼
+┌───────────────┐     ┌───────────────┐     ┌───────────────┐
+│   Scanner     │     │   Analyzer    │     │   Reporter    │
+│  (requests)   │     │ (Compliance)  │     │ (PDF/SARIF…)  │
+└───────────────┘     └───────────────┘     └───────────────┘
+        └──────────────┬──────┴─────────────────────┘
+                       ▼
         ┌─────────────────────────────┐
-        │        SQLite Database       │
-        │  Scans • Findings • History  │
+        │       SQLite Database       │
+        │  Scans • Findings • History │
         └─────────────────────────────┘
 ```
 
