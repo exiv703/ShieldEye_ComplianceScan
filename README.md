@@ -6,12 +6,14 @@
 
 *GDPR • PCI-DSS • ISO 27001, with a GTK4 desktop UI, a REST API, and JSON/SARIF reporting*
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-1F6FEB?style=for-the-badge&labelColor=22272E)](https://opensource.org/licenses/MIT)
+[![CI](https://img.shields.io/github/actions/workflow/status/exiv703/ShieldEye_ComplianceScan/ci.yml?branch=main&label=CI&logo=github&logoColor=white&style=for-the-badge&labelColor=22272E)](https://github.com/exiv703/ShieldEye_ComplianceScan/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/exiv703/ShieldEye_ComplianceScan?display_name=tag&label=Release&color=1F6FEB&style=for-the-badge&labelColor=22272E)](https://github.com/exiv703/ShieldEye_ComplianceScan/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-1F6FEB?style=for-the-badge&labelColor=22272E)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10--3.13-1F6FEB?logo=python&logoColor=white&style=for-the-badge&labelColor=22272E)](https://www.python.org/)
 [![GTK4](https://img.shields.io/badge/GTK-4.0-1F6FEB?logo=gtk&logoColor=white&style=for-the-badge&labelColor=22272E)](https://www.gtk.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-REST_API-1F6FEB?logo=fastapi&logoColor=white&style=for-the-badge&labelColor=22272E)](https://fastapi.tiangolo.com/)
 
-[Features](#features) • [Quick Start](#quick-start) • [Screenshots](#screenshots) • [Architecture](#architecture) • [API](#api) • [Contributing](#contributing)
+[Features](#features) • [Screenshots](#screenshots) • [Architecture](#architecture) • [Quick Start](#quick-start) • [Configuration](#configuration) • [Development](#development)
 
 ---
 
@@ -234,7 +236,7 @@ correlation) live in `.env.example` and are documented in
 
 ---
 
-## API
+## API Usage
 
 The REST API ships with OpenAPI/Swagger docs. Scan and config routes require a
 Bearer token; health and template lookups are open.
@@ -295,6 +297,6 @@ MIT - see [LICENSE](LICENSE).
 
 Part of the **ShieldEye** toolkit:
 
-- **[ShieldEye Core](https://github.com/exiv703/ShieldEye-Core)** - network security scanner (Nmap + GTK4)
+- **[ShieldEye Core](https://github.com/exiv703/Shield-Eye-Core)** - network security scanner (Nmap + GTK4)
 - **[ShieldEye SurfaceScan](https://github.com/exiv703/ShieldEye-SurfaceScan)** - web attack-surface mapper
 - **[ShieldEye NeuralScan](https://github.com/exiv703/ShieldEye-NeuralScan)** - local source-code security scanner
