@@ -33,8 +33,11 @@ RUN useradd -m -u 1000 shieldeye && \
 # Copy requirements first for better caching
 COPY --chown=shieldeye:shieldeye requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies. PyGObject is only used by the GTK GUI, which is
+# not part of this image, and it cannot be built here (no compiler, no GTK).
+RUN grep -viE '^pygobject\b' requirements.txt > /tmp/requirements-api.txt \
+    && pip install --no-cache-dir -r /tmp/requirements-api.txt \
+    && rm /tmp/requirements-api.txt
 
 # Copy application code
 COPY --chown=shieldeye:shieldeye . .
