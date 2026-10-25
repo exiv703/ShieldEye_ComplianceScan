@@ -27,7 +27,7 @@ numpy>=1.26.0
 
 # PDF generation
 pdfkit>=1.0.0
-reportlab>=4.4.0
+reportlab>=5.1.0
 
 # Utilities
 python-dateutil>=2.8.0
