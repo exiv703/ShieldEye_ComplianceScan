@@ -46,7 +46,7 @@ locust>=2.15.0
 
 # REST API (optional)
 fastapi>=0.104.0
-uvicorn>=0.24.0
+uvicorn>=0.54.0
 pydantic>=2.5.0
 pyyaml>=6.0
 
