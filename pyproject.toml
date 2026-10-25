@@ -14,7 +14,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "mypy==1.10.0",
-  "ruff==0.5.7",
+  "ruff==0.17.1",
   "bandit==1.7.9",
   "pre-commit==3.7.1",
   # Why pytest 8.4? Compatible with locust and stable xdist/timeout plugin support
