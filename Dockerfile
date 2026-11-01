@@ -1,5 +1,5 @@
 # ShieldEye ComplianceScan - Production Dockerfile
-FROM python:3.11-slim
+FROM python:3.15-slim
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
